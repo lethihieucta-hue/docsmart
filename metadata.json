@@ -1,0 +1,6 @@
+{
+  "name": "DocuSmart AI - Chuyên gia Tự động hóa Tài liệu Giáo dục",
+  "description": "Hệ thống tự động hóa chuyển đổi tài liệu giáo dục, giải đề thông minh, tính toán không gian trình bày và xuất bản file Word/PDF theo chuẩn layout sư phạm.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
