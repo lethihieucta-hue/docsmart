@@ -16,6 +16,13 @@ export type WorkingSpaceMode = 'auto' | 'all_lines' | 'compact_none';
 
 export type CognitiveLevel = 'NB' | 'TH' | 'VD' | 'VDC'; // Nhận biết, Thông hiểu, Vận dụng, Vận dụng cao
 
+export type QuestionType = 
+  | 'multiple_choice'    // Trắc nghiệm 4 lựa chọn (A, B, C, D)
+  | 'true_false_group'   // Trắc nghiệm Đúng / Sai (Cấu trúc mới gồm 4 ý a, b, c, d với cột Đúng/Sai)
+  | 'short_answer'       // Trả lời ngắn (Điền số / kết quả)
+  | 'essay_problem'      // Bài toán tự luận / Chứng minh hình học
+  | 'fill_blank';        // Điền khuyết
+
 export type MathFigureType = 
   | 'none'
   | 'coordinate_plane'    // Đồ thị hàm số trên mặt phẳng Oxy
@@ -28,9 +35,17 @@ export type MathFigureType =
 export interface MathFigureData {
   type: MathFigureType;
   caption?: string;
-  funcFormula?: string;   // VD: "y = x^2 - 4x + 3" hoặc "y = (2x+1)/(x-1)"
-  params?: Record<string, any>; // Tham số hình học
-  tikzCode?: string;      // Mã nguồn TikZ xuất LaTeX
+  funcFormula?: string;
+  params?: Record<string, any>;
+  tikzCode?: string;
+}
+
+export interface TrueFalseItem {
+  id: string;
+  letter: 'a' | 'b' | 'c' | 'd';
+  statement: string;      // Nội dung khẳng định / mệnh đề
+  isCorrect: boolean;     // true = Đúng, false = Sai
+  explanation?: string;   // Giải thích chi tiết cho ý đó
 }
 
 export interface HeaderConfig {
@@ -60,20 +75,18 @@ export interface FooterConfig {
   bgStyle: 'banner' | 'card' | 'clean';
 }
 
-export type QuestionType = 'multiple_choice' | 'short_answer' | 'essay_problem' | 'fill_blank';
-export type SpaceType = 'lines' | 'grid_box' | 'blank_box' | 'none';
-
 export interface QuestionItem {
   id: string;
   number: number;
   type: QuestionType;
   cognitiveLevel?: CognitiveLevel; // NB, TH, VD, VDC
   questionText: string;
-  options?: string[]; // A. B. C. D.
+  options?: string[]; // A. B. C. D. nếu là multiple_choice
+  tfItems?: TrueFalseItem[]; // 4 ý a, b, c, d nếu là true_false_group
   solution?: string;  // Lời giải chi tiết từng bước
   keyMethod?: string; // Phương pháp / Công thức cốt lõi
   mistakeWarning?: string; // Lưu ý / Bẫy sai lầm học sinh dễ mắc
-  answerKey?: string; // e.g. "A" hoặc "x = 3"
+  answerKey?: string; // e.g. "A" hoặc "a:Đ, b:S, c:Đ, d:Đ" hoặc "x = 3"
   spaceType: SpaceType;
   calculatedLines: number; // Số dòng kẻ hoặc ô trống
   difficulty: 'easy' | 'medium' | 'hard' | 'olympiad';
@@ -82,6 +95,7 @@ export interface QuestionItem {
   customBoxStyle?: QuestionBoxStyle;
 }
 
+export type SpaceType = 'lines' | 'grid_box' | 'blank_box' | 'none';
 export type AnswerKeyDisplayMode = 'bottom' | 'hidden' | 'inline_teacher';
 
 export interface DocumentData {
@@ -150,6 +164,7 @@ export interface AILogicSummaryInfo {
   essayCount: number;
   essayBoxSizeAvg: string;
   multipleChoiceCount: number;
+  trueFalseCount?: number;
   totalSpaceEstimatePages: number;
   cognitiveSummary?: {
     nb: number;
@@ -164,4 +179,15 @@ export interface AIProcessDocResponse {
   layoutPreview: AILayoutPreviewInfo;
   logicSummary: AILogicSummaryInfo;
   questions: QuestionItem[];
+}
+
+export interface ExamPromptConfig {
+  topic: string;
+  gradeLevel: '10' | '11' | '12' | 'thpt_qg' | 'olympiad';
+  mcCount: number;          // Số câu Trắc nghiệm 4 lựa chọn (A-B-C-D)
+  tfCount: number;          // Số câu Trắc nghiệm Đúng / Sai (gồm 4 ý a-b-c-d)
+  shortAnswerCount: number; // Số câu Trả lời ngắn
+  essayCount: number;       // Số câu Tự luận / Chứng minh
+  difficultyLevel: 'basic' | 'standard' | 'advanced' | 'olympiad';
+  specialRequirements?: string;
 }

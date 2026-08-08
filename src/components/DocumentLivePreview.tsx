@@ -435,6 +435,45 @@ export const DocumentLivePreview: React.FC<Props> = ({
                       </div>
                     )}
 
+                    {/* True / False Group Table (Chuẩn cấu trúc Bộ GD&ĐT 2025: Bảng 2 cột Đúng/Sai) */}
+                    {q.type === 'true_false_group' && q.tfItems && q.tfItems.length > 0 && (
+                      <div className="mt-3 ml-1 sm:ml-3 overflow-hidden rounded-xl border border-slate-300 shadow-2xs font-vietnam-pro bg-white">
+                        <table className="w-full text-xs text-left border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100/90 text-slate-800 border-b border-slate-300 font-bold">
+                              <th className="py-2 px-3 text-slate-900">Lệnh hỏi / Các mệnh đề khẳng định</th>
+                              <th className="py-2 px-3 text-center w-16 border-l border-slate-300 text-emerald-800 font-black">
+                                Đúng
+                              </th>
+                              <th className="py-2 px-3 text-center w-16 border-l border-slate-300 text-rose-800 font-black">
+                                Sai
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200">
+                            {q.tfItems.map((item) => (
+                              <tr key={item.id || item.letter} className="hover:bg-slate-50/80 transition-colors">
+                                <td className="py-2 px-3 text-slate-800 font-medium leading-relaxed">
+                                  <span className="font-bold mr-1.5 text-blue-900">{item.letter})</span>
+                                  <MathRenderer content={item.statement} />
+                                </td>
+                                <td className="py-2 px-3 text-center border-l border-slate-200">
+                                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg border border-slate-400 font-bold text-slate-700 bg-slate-50 hover:bg-emerald-50 cursor-pointer shadow-2xs">
+                                    {docData.showAnswerKey === 'inline_teacher' && item.isCorrect ? 'X' : ''}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-3 text-center border-l border-slate-200">
+                                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg border border-slate-400 font-bold text-slate-700 bg-slate-50 hover:bg-rose-50 cursor-pointer shadow-2xs">
+                                    {docData.showAnswerKey === 'inline_teacher' && !item.isCorrect ? 'X' : ''}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
                     {/* Multiple Choice Options Grid with KaTeX */}
                     {q.type === 'multiple_choice' && q.options && q.options.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2.5 ml-1 sm:ml-3 text-xs text-slate-800 font-vietnam-pro">

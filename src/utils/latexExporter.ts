@@ -40,6 +40,23 @@ export function generateLatexSource(docData: DocumentData): string {
       questionsLatex += `\\end{enumerate}\n\n`;
     }
 
+    // True / False Group Table in LaTeX (Bảng 3 cột: Mệnh đề, Đúng, Sai)
+    if (q.type === 'true_false_group' && q.tfItems && q.tfItems.length > 0) {
+      questionsLatex += `\\begin{center}\n`;
+      questionsLatex += `\\begin{tabular}{|p{0.72\\textwidth}|c|c|}\n`;
+      questionsLatex += `\\hline\n`;
+      questionsLatex += `\\textbf{Lệnh hỏi / Các khẳng định} & \\textbf{Đúng} & \\textbf{Sai} \\\\\n`;
+      questionsLatex += `\\hline\n`;
+      q.tfItems.forEach((item) => {
+        const dMark = showAnswerKey === 'inline_teacher' && item.isCorrect ? 'X' : ' ';
+        const sMark = showAnswerKey === 'inline_teacher' && !item.isCorrect ? 'X' : ' ';
+        questionsLatex += `\\textbf{${item.letter})} ${escapeLatexSpecialChars(item.statement)} & ${dMark} & ${sMark} \\\\\n`;
+        questionsLatex += `\\hline\n`;
+      });
+      questionsLatex += `\\end{tabular}\n`;
+      questionsLatex += `\\end{center}\n\n`;
+    }
+
     // Embed TikZ figure if question has mathFigure
     if (q.mathFigure && q.mathFigure.type !== 'none') {
       const figureResult = renderMathFigure(q.mathFigure);

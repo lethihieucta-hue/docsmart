@@ -272,6 +272,68 @@ export const QuestionEditorModal: React.FC<Props> = ({
                 </div>
               )}
 
+              {/* True / False Group Sub-Items Editor (Chuẩn 4 ý a, b, c, d) */}
+              {localQ.type === 'true_false_group' && (
+                <div className="space-y-2.5 pt-1 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <label className="font-semibold text-slate-800 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                      <span>Danh sách 4 mệnh đề Đúng / Sai (Cấu trúc mới 2025):</span>
+                    </label>
+                  </div>
+
+                  <div className="space-y-2">
+                    {(localQ.tfItems || [
+                      { id: 'tf_a', letter: 'a', statement: 'Mệnh đề khẳng định a', isCorrect: true },
+                      { id: 'tf_b', letter: 'b', statement: 'Mệnh đề khẳng định b', isCorrect: false },
+                      { id: 'tf_c', letter: 'c', statement: 'Mệnh đề khẳng định c', isCorrect: true },
+                      { id: 'tf_d', letter: 'd', statement: 'Mệnh đề khẳng định d', isCorrect: true },
+                    ]).map((item, tfIdx) => (
+                      <div key={item.id || tfIdx} className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-md bg-blue-900 text-white font-bold flex items-center justify-center text-xs shrink-0">
+                            {item.letter})
+                          </span>
+                          <input
+                            type="text"
+                            value={item.statement}
+                            onChange={(e) => {
+                              const updatedTf = [...(localQ.tfItems || [])];
+                              if (!updatedTf[tfIdx]) {
+                                updatedTf[tfIdx] = { ...item, statement: e.target.value };
+                              } else {
+                                updatedTf[tfIdx].statement = e.target.value;
+                              }
+                              setLocalQ({ ...localQ, tfItems: updatedTf });
+                            }}
+                            className="flex-1 p-1.5 text-xs border border-slate-300 rounded-lg bg-white font-vietnam-pro"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedTf = [...(localQ.tfItems || [])];
+                              if (!updatedTf[tfIdx]) {
+                                updatedTf[tfIdx] = { ...item, isCorrect: !item.isCorrect };
+                              } else {
+                                updatedTf[tfIdx].isCorrect = !updatedTf[tfIdx].isCorrect;
+                              }
+                              setLocalQ({ ...localQ, tfItems: updatedTf });
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              item.isCorrect
+                                ? 'bg-emerald-600 text-white shadow-2xs'
+                                : 'bg-rose-600 text-white shadow-2xs'
+                            }`}
+                          >
+                            {item.isCorrect ? '✅ ĐÚNG' : '❌ SAI'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Pedagogical 3-Step Solution Fields */}
               <div className="space-y-3 pt-2 border-t border-slate-100">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

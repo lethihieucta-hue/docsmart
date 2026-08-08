@@ -27,26 +27,28 @@ export const DEFAULT_FOOTER_CONFIG: FooterConfig = {
 
 export const SAMPLE_DOCUMENTS: DocumentData[] = [
   {
-    title: 'Đề Ôn Tập THPT QG: Hàm Số & Hình Không Gian 3D',
-    rawText: `Câu 1 (Trắc nghiệm): Cho hàm số $y = ax^2 + bx + c$ ($a \\neq 0$) có đồ thị là một parabol như hình vẽ. Tọa độ đỉnh $I$ của parabol là:
-A. $I\\left(-\\frac{b}{2a}; -\\frac{\\Delta}{4a}\\right)$
-B. $I\\left(\\frac{b}{2a}; \\frac{\\Delta}{4a}\\right)$
-C. $I\\left(-\\frac{b}{a}; -\\frac{\\Delta}{2a}\\right)$
-D. $I\\left(-\\frac{b}{2a}; \\frac{\\Delta}{4a}\\right)$
+    title: 'Đề Thi Chuẩn Mới 2025: Trắc Nghiệm Đúng/Sai (4 Ý) & Hình 3D',
+    rawText: `PHẦN I: CÂU TRẮC NGHIỆM NHIỀU LỰA CHỌN (4 Phương án)
+Câu 1: Cho hàm số bậc ba $y = f(x) = x^3 - 3x^2 + 2$ có đồ thị là $(C)$. Tọa độ điểm cực đại của đồ thị hàm số là:
+A. $M(0; 2)$
+B. $N(2; -2)$
+C. $P(1; 0)$
+D. $Q(-1; -2)$
 
-Câu 2 (Trắc nghiệm): Cho hình chóp $S.ABCD$ có đáy $ABCD$ là hình bình hành tâm $O$. Đường cao $SH \\perp (ABCD)$ với $H$ là trung điểm của $AB$. Khẳng định nào sau đây là đúng về các cạnh khuất?
-A. Cạnh $AD, CD, SD, SH$ là các nét đứt
-B. Cạnh $SB, SC$ là các nét đứt
-C. Tất cả các cạnh đều là nét liền
-D. Cạnh $BC$ là nét đứt
+PHẦN II: CÂU TRẮC NGHIỆM ĐÚNG / SAI (Mỗi câu gồm 4 ý a, b, c, d)
+Câu 2: Cho hàm số $y = f(x) = \\frac{2x - 1}{x + 1}$ có đồ thị là $(H)$. Xét tính Đúng hoặc Sai của các khẳng định sau:
+a) Tập xác định của hàm số là $D = \\mathbb{R} \\setminus \\{-1\\}$.
+b) Đạo hàm của hàm số là $y' = \\frac{3}{(x+1)^2} > 0, \\forall x \\neq -1$.
+c) Đồ thị $(H)$ có tiệm cận đứng $x = 2$ và tiệm cận ngang $y = -1$.
+d) Giao điểm của hai đường tiệm cận là tâm đối xứng $I(-1; 2)$ của đồ thị $(H)$.
 
-Câu 3 (Trả lời ngắn): Hãy tính tích phân $I = \\int_{0}^{1} (2x + 1) e^x dx$ và biểu diễn kết quả dưới dạng $a \\cdot e + b$ với $a, b \\in \\mathbb{Z}$.
+PHẦN III: CÂU TRẮC NGHIỆM TRẢ LỜI NGẮN
+Câu 3: Cho tứ diện đều $ABCD$ có cạnh bằng $a\\sqrt{2}$. Hãy tính khoảng cách giữa hai đường thẳng chéo nhau $AB$ và $CD$.
 
-Câu 4 (Trả lời ngắn): Cho tam giác $ABC$ có cạnh $a = 8$, $b = 10$, góc $\\widehat{C} = 60^\\circ$. Áp dụng định lý Cosin để tính độ dài cạnh $c$.
-
-Câu 5 (Bài toán tự luận): Cho hình chóp $S.ABCD$ có đáy $ABCD$ là hình vuông cạnh $a$, cạnh bên $SA$ vuông góc với mặt phẳng đáy $(ABCD)$ và $SA = a\\sqrt{3}$.
-a) Chứng minh rằng $BC \\perp (SAB)$ và tính thể tích khối chóp $S.ABCD$.
-b) Tính góc giữa đường thẳng $SC$ và mặt phẳng $(ABCD)$.`,
+PHẦN IV: BÀI TOÁN TỰ LUẬN & HÌNH HỌC KHÔNG GIAN
+Câu 4: Cho hình chóp $S.ABCD$ có đáy $ABCD$ là hình vuông cạnh $a$, cạnh bên $SA \\perp (ABCD)$ và $SA = a\\sqrt{3}$.
+a) Chứng minh $BC \\perp (SAB)$ và tính thể tích khối chóp $S.ABCD$.
+b) Tính khoảng cách từ điểm $A$ đến mặt phẳng $(SBD)$.`,
     header: { ...DEFAULT_HEADER_CONFIG },
     footer: { ...DEFAULT_FOOTER_CONFIG },
     templateId: 'thpt_national',
@@ -63,99 +65,104 @@ b) Tính góc giữa đường thẳng $SC$ và mặt phẳng $(ABCD)$.`,
         number: 1,
         type: 'multiple_choice',
         cognitiveLevel: 'NB',
-        questionText: 'Cho hàm số $y = ax^2 + bx + c$ ($a \\neq 0$) có đồ thị là một parabol như hình vẽ bên. Tọa độ đỉnh $I$ của parabol là:',
+        questionText: 'Cho hàm số bậc ba $y = f(x) = x^3 - 3x^2 + 2$ có đồ thị là $(C)$. Tọa độ điểm cực đại của đồ thị hàm số là:',
         options: [
-          'A. $I\\left(-\\frac{b}{2a}; -\\frac{\\Delta}{4a}\\right)$',
-          'B. $I\\left(\\frac{b}{2a}; \\frac{\\Delta}{4a}\\right)$',
-          'C. $I\\left(-\\frac{b}{a}; -\\frac{\\Delta}{2a}\\right)$',
-          'D. $I\\left(-\\frac{b}{2a}; \\frac{\\Delta}{4a}\\right)$',
+          'A. $M(0; 2)$',
+          'B. $N(2; -2)$',
+          'C. $P(1; 0)$',
+          'D. $Q(-1; -2)$',
         ],
-        solution: 'Theo lý thuyết hàm số bậc hai $y = ax^2 + bx + c$, đồ thị parabol có trục đối xứng là đường thẳng $x = -\\frac{b}{2a}$ và tọa độ đỉnh là $I\\left(-\\frac{b}{2a}; -\\frac{\\Delta}{4a}\\right)$ với $\\Delta = b^2 - 4ac$. Chọn đáp án A.',
-        keyMethod: 'Công thức tọa độ đỉnh parabol $I(-b/2a; -\\Delta/4a)$.',
-        mistakeWarning: 'Học sinh hay nhầm dấu trừ ở tung độ đỉnh $y_I = -\\Delta / 4a$.',
+        solution: 'Ta có $y\' = 3x^2 - 6x = 3x(x - 2)$. Cho $y\' = 0 \\Leftrightarrow x = 0$ hoặc $x = 2$.\nQua điểm $x = 0$, đạo hàm $y\'$ đổi dấu từ dương sang âm, $y(0) = 2$. Do đó điểm cực đại của đồ thị hàm số là $M(0; 2)$. Chọn đáp án A.',
+        keyMethod: 'Tính đạo hàm $y\'=0$, lập bảng xét dấu để xác định tọa độ điểm cực đại.',
         answerKey: 'A',
         spaceType: 'none',
         calculatedLines: 0,
         difficulty: 'easy',
-        topic: 'Hàm số bậc hai',
+        topic: 'Cực trị hàm số bậc ba',
         mathFigure: {
           type: 'coordinate_plane',
-          caption: 'Đồ thị Parabol y = x^2 - 4x + 3 có đỉnh I(2; -1)',
-          funcFormula: 'y = x^2 - 4x + 3',
+          caption: 'Đồ thị hàm số bậc ba y = x^3 - 3x^2 + 2',
+          funcFormula: 'y = x^3 - 3x^2 + 2',
         },
       },
       {
         id: 'q2',
         number: 2,
-        type: 'multiple_choice',
+        type: 'true_false_group',
         cognitiveLevel: 'TH',
-        questionText: 'Cho hình chóp $S.ABCD$ có đáy $ABCD$ là hình bình hành. Đường cao $SH \\perp (ABCD)$ với $H$ thuộc đáy. Khẳng định nào sau đây đúng về các cạnh khuất trong biểu diễn không gian 3D?',
-        options: [
-          'A. Cạnh $AD, CD, SD, SH$ được vẽ bằng nét đứt chuẩn xác',
-          'B. Cạnh $SB, SC$ được vẽ bằng nét đứt',
-          'C. Tất cả các cạnh của khối chóp đều là nét liền',
-          'D. Cạnh $BC, CD$ là các nét đứt',
+        questionText: 'Cho hàm số $y = f(x) = \\frac{2x - 1}{x + 1}$ có đồ thị là $(H)$. Xét tính Đúng hoặc Sai của các khẳng định sau:',
+        tfItems: [
+          {
+            id: 'tf_2_a',
+            letter: 'a',
+            statement: 'Tập xác định của hàm số là $D = \\mathbb{R} \\setminus \\{-1\\}$.',
+            isCorrect: true,
+            explanation: 'Đúng vì mẫu số $x + 1 \\neq 0 \\Leftrightarrow x \\neq -1$.',
+          },
+          {
+            id: 'tf_2_b',
+            letter: 'b',
+            statement: 'Đạo hàm của hàm số là $y\' = \\frac{3}{(x+1)^2} > 0, \\forall x \\neq -1$.',
+            isCorrect: true,
+            explanation: 'Đúng theo quy tắc đạo hàm phân thức bậc nhất: $y\' = \\frac{2(1) - (-1)(1)}{(x+1)^2} = \\frac{3}{(x+1)^2} > 0$.',
+          },
+          {
+            id: 'tf_2_c',
+            letter: 'c',
+            statement: 'Đồ thị $(H)$ có tiệm cận đứng $x = 2$ và tiệm cận ngang $y = -1$.',
+            isCorrect: false,
+            explanation: 'Sai vì tiệm cận đứng là $x = -1$ và tiệm cận ngang là $y = \\frac{2}{1} = 2$.',
+          },
+          {
+            id: 'tf_2_d',
+            letter: 'd',
+            statement: 'Giao điểm của hai đường tiệm cận là tâm đối xứng $I(-1; 2)$ của đồ thị $(H)$.',
+            isCorrect: true,
+            explanation: 'Đúng vì tâm đối xứng của hàm phân thức bậc nhất trên bậc nhất là giao điểm của TCĐ ($x=-1$) và TCN ($y=2$).',
+          },
         ],
-        solution: 'Trong hình biểu diễn của hình chóp $S.ABCD$, các đoạn thẳng nằm ở mặt sau khuất tầm nhìn gồm $AD, AB$ (hoặc $AD, CD$) và đường cao bên trong $SH$ phải được biểu diễn bằng nét đứt theo quy chuẩn hình học không gian. Chọn đáp án A.',
-        keyMethod: 'Quy tắc nét đứt (cạnh khuất) và nét liền (cạnh nhìn thấy).',
-        answerKey: 'A',
-        spaceType: 'none',
-        calculatedLines: 0,
+        solution: 'Xét hàm phân thức $y = \\frac{2x - 1}{x + 1}$:\n- Mệnh đề a: Đúng ($D = \\mathbb{R} \\setminus \\{-1\\}$).\n- Mệnh đề b: Đúng ($y\' = \\frac{3}{(x+1)^2} > 0$).\n- Mệnh đề c: Sai (TCĐ là $x = -1$, TCN là $y = 2$).\n- Mệnh đề d: Đúng (Tâm đối xứng $I(-1; 2)$).',
+        keyMethod: 'Khảo sát hàm phân thức nhất biến và xác định tính đúng/sai của 4 mệnh đề độc lập.',
+        answerKey: 'a: Đ, b: Đ, c: S, d: Đ',
+        spaceType: 'lines',
+        calculatedLines: 4,
         difficulty: 'medium',
-        topic: 'Hình học không gian',
-        mathFigure: {
-          type: 'pyramid_3d',
-          caption: 'Hình chóp S.ABCD với nét đứt khuất và đường cao SH ⊥ (ABCD)',
-        },
+        topic: 'Hàm số phân thức & Tiệm cận',
       },
       {
         id: 'q3',
         number: 3,
         type: 'short_answer',
         cognitiveLevel: 'VD',
-        questionText: 'Hãy tính tích phân $I = \\int_{0}^{1} (2x + 1) e^x dx$ và xác định các hệ số $a, b \\in \\mathbb{Z}$ trong biểu diễn $I = a \\cdot e + b$.',
-        solution: 'Sử dụng phương pháp tích phân từng phần: Đặt $u = 2x + 1 \\Rightarrow du = 2dx$; $dv = e^x dx \\Rightarrow v = e^x$.\nTa có: $I = (2x + 1)e^x\\Big|_{0}^{1} - \\int_{0}^{1} 2e^x dx = (3e - 1) - 2(e - 1) = 3e - 1 - 2e + 2 = e + 1$.\nDo đó $a = 1, b = 1$. Kết quả $I = e + 1$.',
-        keyMethod: 'Công thức tích phân từng phần $\\int u dv = uv - \\int v du$.',
-        answerKey: 'I = e + 1 (a = 1, b = 1)',
+        questionText: 'Cho tứ diện đều $ABCD$ có cạnh bằng $a\\sqrt{2}$. Hãy tính khoảng cách $d$ giữa hai đường thẳng chéo nhau $AB$ và $CD$.',
+        solution: 'Gọi $M, N$ lần lượt là trung điểm của $AB$ và $CD$. Vì tứ diện $ABCD$ là tứ diện đều nên đoạn nối hai trung điểm $MN$ chính là đoạn vuông góc chung của $AB$ và $CD$.\nTa có tam giác $ACD$ đều cạnh $a\\sqrt{2} \\Rightarrow AN = \\frac{a\\sqrt{2} \\cdot \\sqrt{3}}{2} = \\frac{a\\sqrt{6}}{2}$.\nTrong tam giác vuông $AMN$ tại $M$: $MN = \\sqrt{AN^2 - AM^2} = \\sqrt{\\left(\\frac{a\\sqrt{6}}{2}\\right)^2 - \\left(\\frac{a\\sqrt{2}}{2}\\right)^2} = \\sqrt{\\frac{6a^2}{4} - \\frac{2a^2}{4}} = \\sqrt{a^2} = a$.\nDo đó khoảng cách $d(AB, CD) = a$.',
+        keyMethod: 'Đoạn vuông góc chung nối hai trung điểm của hai cạnh đối trong tứ diện đều.',
+        answerKey: 'd = a',
         spaceType: 'lines',
         calculatedLines: 4,
         difficulty: 'medium',
-        topic: 'Nguyên hàm - Tích phân',
+        topic: 'Khoảng cách trong không gian',
+        mathFigure: {
+          type: 'triangle_geometry',
+          caption: 'Tam giác đều và đường cao tính đoạn vuông góc chung',
+        },
       },
       {
         id: 'q4',
         number: 4,
-        type: 'short_answer',
-        cognitiveLevel: 'TH',
-        questionText: 'Cho tam giác $ABC$ có $a = 8$, $b = 10$, góc $\\widehat{C} = 60^\\circ$. Áp dụng định lý Cosin để tính độ dài cạnh $c$.',
-        solution: 'Theo định lý Cosin trong tam giác $ABC$:\n$$c^2 = a^2 + b^2 - 2ab \\cos C = 8^2 + 10^2 - 2(8)(10) \\cos 60^\\circ$$\n$$c^2 = 64 + 100 - 160 \\cdot \\frac{1}{2} = 164 - 80 = 84 \\Rightarrow c = \\sqrt{84} = 2\\sqrt{21}$$.',
-        keyMethod: 'Định lý Cosin: $c^2 = a^2 + b^2 - 2ab \\cos C$.',
-        answerKey: 'c = 2\\sqrt{21}',
-        spaceType: 'lines',
-        calculatedLines: 4,
-        difficulty: 'medium',
-        topic: 'Hệ thức lượng trong tam giác',
-        mathFigure: {
-          type: 'triangle_geometry',
-          caption: 'Tam giác ABC có đường cao AH và đường tròn nội tiếp',
-        },
-      },
-      {
-        id: 'q5',
-        number: 5,
         type: 'essay_problem',
         cognitiveLevel: 'VDC',
-        questionText: 'Cho hình chóp $S.ABCD$ có đáy $ABCD$ là hình vuông cạnh $a$, cạnh bên $SA \\perp (ABCD)$ và $SA = a\\sqrt{3}$.\na) Chứng minh rằng $BC \\perp (SAB)$ và tính thể tích khối chóp $S.ABCD$.\nb) Xác định và tính số đo góc giữa đường thẳng $SC$ và mặt phẳng đáy $(ABCD)$.',
-        solution: 'a) Ta có $BC \\perp AB$ (do $ABCD$ là hình vuông) và $BC \\perp SA$ (do $SA \\perp (ABCD)$). Suy ra $BC \\perp (SAB)$.\nDiện tích đáy $S_{ABCD} = a^2$. Chiều cao $h = SA = a\\sqrt{3}$.\nThể tích khối chóp $V = \\frac{1}{3} S_{ABCD} \\cdot SA = \\frac{1}{3} a^2 \\cdot a\\sqrt{3} = \\frac{a^3\\sqrt{3}}{3}$.\n\nb) Vì $SA \\perp (ABCD)$ nên $AC$ là hình chiếu vuông góc của $SC$ lên $(ABCD)$. Do đó góc giữa $SC$ và $(ABCD)$ là góc $\\widehat{SCA}$.\nTam giác $ABCD$ vuông tại $B \\Rightarrow AC = a\\sqrt{2}$.\nTrong tam giác vuông $SAC$ tại $A$: $\\tan \\widehat{SCA} = \\frac{SA}{AC} = \\frac{a\\sqrt{3}}{a\\sqrt{2}} = \\sqrt{\\frac{3}{2}} = \\frac{\\sqrt{6}}{2}$.\nSuy ra $\\widehat{SCA} = \\arctan\\left(\\frac{\\sqrt{6}}{2}\\right) \\approx 50^\\circ 46\'$.',
-        keyMethod: 'Chứng minh đường vuông góc với mặt phẳng và góc giữa đường thẳng với mặt phẳng.',
-        answerKey: 'a) V = (a^3\\sqrt{3})/3; b) góc SCA ≈ 50°46\'',
+        questionText: 'Cho hình chóp $S.ABCD$ có đáy $ABCD$ là hình vuông cạnh $a$, cạnh bên $SA \\perp (ABCD)$ và $SA = a\\sqrt{3}$.\na) Chứng minh $BC \\perp (SAB)$ và tính thể tích khối chóp $S.ABCD$.\nb) Tính khoảng cách từ điểm $A$ đến mặt phẳng $(SBD)$.',
+        solution: 'a) Ta có $BC \\perp AB$ (do $ABCD$ là hình vuông) và $BC \\perp SA$ (do $SA \\perp (ABCD)$). Suy ra $BC \\perp (SAB)$.\nDiện tích đáy $S_{ABCD} = a^2$. Chiều cao $h = SA = a\\sqrt{3}$.\nThể tích khối chóp $V = \\frac{1}{3} S_{ABCD} \\cdot SA = \\frac{1}{3} a^2 \\cdot a\\sqrt{3} = \\frac{a^3\\sqrt{3}}{3}$.\n\nb) Gọi $O = AC \\cap BD$. Ta có $AO = \\frac{a\\sqrt{2}}{2}$. Kẻ $AH \\perp SO$ tại $H$.\nVì $BD \\perp AC$ và $BD \\perp SA \\Rightarrow BD \\perp (SAC) \\Rightarrow BD \\perp AH$.\nDo đó $AH \\perp (SBD) \\Rightarrow d(A, (SBD)) = AH$.\nÁp dụng hệ thức lượng trong tam giác vuông $SAO$ tại $A$:\n$$\\frac{1}{AH^2} = \\frac{1}{SA^2} + \\frac{1}{AO^2} = \\frac{1}{3a^2} + \\frac{1}{(a\\sqrt{2}/2)^2} = \\frac{1}{3a^2} + \\frac{2}{a^2} = \\frac{7}{3a^2}$$\n$$\\Rightarrow AH = \\sqrt{\\frac{3}{7}} a = \\frac{a\\sqrt{21}}{7}$$.',
+        keyMethod: 'Phương pháp dựng khoảng cách từ chân đường vuông góc $A$ đến mặt bên $(SBD)$.',
+        answerKey: 'a) V = (a^3\\sqrt{3})/3; b) d = (a\\sqrt{21})/7',
         spaceType: 'grid_box',
         calculatedLines: 12,
         difficulty: 'hard',
-        topic: 'Thể tích khối đa diện & Góc trong không gian',
+        topic: 'Khoảng cách từ điểm đến mặt phẳng & Thể tích khối chóp',
         mathFigure: {
           type: 'pyramid_3d',
-          caption: 'Khối chóp S.ABCD đáy vuông cạnh a, SA ⊥ (ABCD)',
+          caption: 'Hình chóp S.ABCD đáy hình vuông, SA ⊥ (ABCD)',
         },
       },
     ],

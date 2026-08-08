@@ -136,6 +136,97 @@ export async function exportToDocx(docData: DocumentData) {
       });
     }
 
+    // True / False Group Table in Word (.docx)
+    if (q.type === 'true_false_group' && q.tfItems && q.tfItems.length > 0) {
+      const tfRows: TableRow[] = [
+        new TableRow({
+          children: [
+            new TableCell({
+              width: { size: 70, type: WidthType.PERCENTAGE },
+              children: [
+                new Paragraph({
+                  children: [new TextRun({ text: 'Lệnh hỏi / Các mệnh đề khẳng định', bold: true, size: 20, color: '1E3A8A' })],
+                }),
+              ],
+            }),
+            new TableCell({
+              width: { size: 15, type: WidthType.PERCENTAGE },
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [new TextRun({ text: 'Đúng', bold: true, size: 20, color: '059669' })],
+                }),
+              ],
+            }),
+            new TableCell({
+              width: { size: 15, type: WidthType.PERCENTAGE },
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [new TextRun({ text: 'Sai', bold: true, size: 20, color: 'DC2626' })],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ];
+
+      q.tfItems.forEach((item) => {
+        const dText = showAnswerKey === 'inline_teacher' && item.isCorrect ? 'X' : '';
+        const sText = showAnswerKey === 'inline_teacher' && !item.isCorrect ? 'X' : '';
+        tfRows.push(
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 70, type: WidthType.PERCENTAGE },
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: `${item.letter}) `, bold: true, size: 20, color: '1E3A8A' }),
+                      new TextRun({ text: item.statement, size: 20 }),
+                    ],
+                  }),
+                ],
+              }),
+              new TableCell({
+                width: { size: 15, type: WidthType.PERCENTAGE },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text: dText, bold: true, size: 22, color: '059669' })],
+                  }),
+                ],
+              }),
+              new TableCell({
+                width: { size: 15, type: WidthType.PERCENTAGE },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text: sText, bold: true, size: 22, color: 'DC2626' })],
+                  }),
+                ],
+              }),
+            ],
+          })
+        );
+      });
+
+      const tfTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+          top: { style: BorderStyle.SINGLE, size: 4, color: 'CBD5E1' },
+          bottom: { style: BorderStyle.SINGLE, size: 4, color: 'CBD5E1' },
+          left: { style: BorderStyle.SINGLE, size: 4, color: 'CBD5E1' },
+          right: { style: BorderStyle.SINGLE, size: 4, color: 'CBD5E1' },
+          insideHorizontal: { style: BorderStyle.SINGLE, size: 4, color: 'E2E8F0' },
+          insideVertical: { style: BorderStyle.SINGLE, size: 4, color: 'E2E8F0' },
+        },
+        rows: tfRows,
+      });
+
+      questionParagraphs.push(tfTable);
+    }
+
     // Inlined Solution if selected
     if (showAnswerKey === 'inline_teacher' && q.solution) {
       questionParagraphs.push(

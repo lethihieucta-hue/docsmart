@@ -12,6 +12,7 @@ import { ApiKeySettingsModal } from './components/ApiKeySettingsModal';
 import { ExamShufflerModal } from './components/ExamShufflerModal';
 import { PresentationModal } from './components/PresentationModal';
 import { StudentPracticeModal } from './components/StudentPracticeModal';
+import { AiExamPromptGeneratorModal } from './components/AiExamPromptGeneratorModal';
 import { exportToDocx } from './utils/docxExporter';
 import { exportToLatex } from './utils/latexExporter';
 import {
@@ -29,6 +30,7 @@ import {
   Tv,
   Trophy,
   AlertCircle,
+  Wand2,
 } from 'lucide-react';
 
 export default function App() {
@@ -46,6 +48,7 @@ export default function App() {
   const [isShufflerModalOpen, setIsShufflerModalOpen] = useState<boolean>(false);
   const [isPresentationOpen, setIsPresentationOpen] = useState<boolean>(false);
   const [isStudentPracticeOpen, setIsStudentPracticeOpen] = useState<boolean>(false);
+  const [isPromptGeneratorOpen, setIsPromptGeneratorOpen] = useState<boolean>(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -74,6 +77,21 @@ export default function App() {
       setApiError(null);
       showToast(`Đã nạp mẫu: ${preset.title}`);
     }
+  };
+
+  // Handler when AI generates questions from Prompt Generator Modal
+  const handleExamGenerated = (questions: QuestionItem[], topicTitle: string) => {
+    setDocData((prev) => ({
+      ...prev,
+      title: `Đề thi AI: ${topicTitle}`,
+      header: {
+        ...prev.header,
+        examTitle: `ĐỀ THI: ${topicTitle.toUpperCase()}`,
+      },
+      questions,
+    }));
+    setApiError(null);
+    showToast(`Đã sinh thành công ${questions.length} câu hỏi theo cấu trúc mới!`);
   };
 
   // Run AI Processing via Express Server /api/process-doc with Fallback Retry
@@ -271,6 +289,15 @@ export default function App() {
 
           {/* Quick Header Buttons with strictly compliant API Key button */}
           <div className="flex items-center gap-2">
+            {/* AI Prompt Generator Button */}
+            <button
+              onClick={() => setIsPromptGeneratorOpen(true)}
+              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xs transition-all"
+            >
+              <Wand2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">AI Tạo Đề Gợi Ý</span>
+            </button>
+
             {/* API Key Settings Button */}
             <button
               onClick={() => setIsApiKeyModalOpen(true)}
@@ -326,6 +353,7 @@ export default function App() {
           rawText={rawText}
           onRawTextChange={setRawText}
           onRunAiProcessing={handleRunAiProcessing}
+          onOpenPromptGenerator={() => setIsPromptGeneratorOpen(true)}
           isLoading={isLoading}
           onSelectPreset={handleSelectPreset}
           enableAiSolve={docData.enableAiSolve}
@@ -428,6 +456,12 @@ export default function App() {
         isOpen={isStudentPracticeOpen}
         onClose={() => setIsStudentPracticeOpen(false)}
         docData={docData}
+      />
+
+      <AiExamPromptGeneratorModal
+        isOpen={isPromptGeneratorOpen}
+        onClose={() => setIsPromptGeneratorOpen(false)}
+        onExamGenerated={handleExamGenerated}
       />
     </div>
   );

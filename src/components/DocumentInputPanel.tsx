@@ -2,12 +2,27 @@ import React, { useState } from 'react';
 import { SAMPLE_DOCUMENTS } from '../data/sampleDocs';
 import { QuestionBoxStyle, WorkingSpaceMode } from '../types';
 import { MathSymbolPalette } from './MathSymbolPalette';
-import { Sparkles, FileText, Upload, RefreshCw, Layers, CheckSquare, Square, Box, Space, BookOpen, Code2 } from 'lucide-react';
+import {
+  Sparkles,
+  FileText,
+  Upload,
+  RefreshCw,
+  Layers,
+  CheckSquare,
+  Square,
+  Box,
+  Space,
+  BookOpen,
+  Code2,
+  Wand2,
+  FileType,
+} from 'lucide-react';
 
 interface Props {
   rawText: string;
   onRawTextChange: (text: string) => void;
   onRunAiProcessing: () => void;
+  onOpenPromptGenerator: () => void;
   isLoading: boolean;
   onSelectPreset: (docIndex: number) => void;
   enableAiSolve: boolean;
@@ -18,10 +33,18 @@ interface Props {
   onChangeQuestionBoxStyle: (style: QuestionBoxStyle) => void;
 }
 
+declare global {
+  interface Window {
+    mammoth?: any;
+    pdfjsLib?: any;
+  }
+}
+
 export const DocumentInputPanel: React.FC<Props> = ({
   rawText,
   onRawTextChange,
   onRunAiProcessing,
+  onOpenPromptGenerator,
   isLoading,
   onSelectPreset,
   enableAiSolve,
@@ -33,19 +56,102 @@ export const DocumentInputPanel: React.FC<Props> = ({
 }) => {
   const [selectedPresetIndex, setSelectedPresetIndex] = useState<number>(0);
   const [showMathPalette, setShowMathPalette] = useState<boolean>(true);
+  const [isReadingFile, setIsReadingFile] = useState<boolean>(false);
+  const [fileStatusMsg, setFileStatusMsg] = useState<string | null>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (text) {
-        onRawTextChange(text);
+    setIsReadingFile(true);
+    setFileStatusMsg(`Đang đọc tệp ${file.name}...`);
+
+    const fileNameLower = file.name.toLowerCase();
+
+    // 1. Handle DOCX File using Mammoth.js
+    if (fileNameLower.endsWith('.docx') || fileNameLower.endsWith('.doc')) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        if (window.mammoth) {
+          const result = await window.mammoth.extractRawText({ arrayBuffer });
+          const extractedText = result.value || '';
+          if (extractedText.trim().length > 0) {
+            onRawTextChange(extractedText);
+            setFileStatusMsg(`✅ Đã trích xuất ${extractedText.length} ký tự từ file Word!`);
+          } else {
+            throw new Error('File Word rỗng hoặc không có văn bản.');
+          }
+        } else {
+          // Fallback text reader if mammoth is not available
+          const text = await file.text();
+          onRawTextChange(text);
+          setFileStatusMsg(`Đã nạp file.`);
+        }
+      } catch (err: any) {
+        console.error('Lỗi đọc Word DOCX:', err);
+        setFileStatusMsg(`Có lỗi khi đọc file Word: ${err.message}`);
+      } finally {
+        setIsReadingFile(false);
       }
-    };
-    reader.readAsText(file);
+      return;
+    }
+
+    // 2. Handle PDF File using PDF.js
+    if (fileNameLower.endsWith('.pdf')) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        if (window.pdfjsLib) {
+          const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+          const pdfDoc = await loadingTask.promise;
+          let fullPdfText = '';
+
+          for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+            const page = await pdfDoc.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items
+              .map((item: any) => item.str)
+              .join(' ');
+            fullPdfText += `\n--- [Trang ${pageNum}] ---\n` + pageText;
+          }
+
+          if (fullPdfText.trim().length > 0) {
+            onRawTextChange(fullPdfText);
+            setFileStatusMsg(`✅ Đã chuyển đổi ${pdfDoc.numPages} trang PDF sang văn bản Toán học!`);
+          } else {
+            throw new Error('File PDF scan dạng ảnh hoặc không chứa lớp văn bản.');
+          }
+        } else {
+          setFileStatusMsg('Thư viện PDF.js chưa sẵn sàng.');
+        }
+      } catch (err: any) {
+        console.error('Lỗi đọc PDF:', err);
+        setFileStatusMsg(`Lỗi đọc file PDF: ${err.message}`);
+      } finally {
+        setIsReadingFile(false);
+      }
+      return;
+    }
+
+    // 3. Handle Plain Text, LaTeX (.tex), Markdown
+    try {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result as string;
+        if (text) {
+          onRawTextChange(text);
+          setFileStatusMsg(`✅ Đã nạp thành công file văn bản / LaTeX!`);
+        }
+        setIsReadingFile(false);
+      };
+      reader.onerror = () => {
+        setFileStatusMsg('Lỗi khi đọc file văn bản.');
+        setIsReadingFile(false);
+      };
+      reader.readAsText(file, 'UTF-8');
+    } catch (err: any) {
+      setFileStatusMsg(`Lỗi: ${err.message}`);
+      setIsReadingFile(false);
+    }
   };
 
   const handleInsertSnippet = (snippet: string) => {
@@ -66,26 +172,47 @@ export const DocumentInputPanel: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Sample Presets Dropdown */}
-        <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-slate-400" />
-          <select
-            value={selectedPresetIndex}
-            onChange={(e) => {
-              const idx = parseInt(e.target.value);
-              setSelectedPresetIndex(idx);
-              onSelectPreset(idx);
-            }}
-            className="px-3 py-1.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none"
+        {/* Action Controls in Header: AI Exam Prompt Generator & Sample Presets */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenPromptGenerator}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-xs transition-all animate-pulse"
           >
-            {SAMPLE_DOCUMENTS.map((doc, idx) => (
-              <option key={idx} value={idx}>
-                Nạp Đề Mẫu: {doc.title}
-              </option>
-            ))}
-          </select>
+            <Wand2 className="w-3.5 h-3.5" />
+            <span>✨ AI Sinh Đề Từ Gợi Ý</span>
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            <Layers className="w-4 h-4 text-slate-400" />
+            <select
+              value={selectedPresetIndex}
+              onChange={(e) => {
+                const idx = parseInt(e.target.value);
+                setSelectedPresetIndex(idx);
+                onSelectPreset(idx);
+              }}
+              className="px-3 py-1.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none"
+            >
+              {SAMPLE_DOCUMENTS.map((doc, idx) => (
+                <option key={idx} value={idx}>
+                  Nạp Đề Mẫu: {doc.title}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
+
+      {/* File status notice */}
+      {fileStatusMsg && (
+        <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs font-semibold flex items-center justify-between">
+          <span>{fileStatusMsg}</span>
+          <button onClick={() => setFileStatusMsg(null)} className="text-slate-500 hover:text-slate-800 text-[10px]">
+            Đóng
+          </button>
+        </div>
+      )}
 
       {/* Raw Textarea */}
       <div className="relative">
@@ -93,7 +220,7 @@ export const DocumentInputPanel: React.FC<Props> = ({
           rows={6}
           value={rawText}
           onChange={(e) => onRawTextChange(e.target.value)}
-          placeholder="Dán câu hỏi, đề thi toán học thô vào đây (Các công thức $...$, $$...$$, hình học 3D được bảo toàn nguyên vẹn)..."
+          placeholder="Dán câu hỏi, đề thi toán học thô hoặc tải lên tệp PDF, DOCX, LaTeX tại đây (Các công thức $...$, $$...$$, hình học 3D được bảo toàn nguyên vẹn)..."
           className="w-full p-4 text-xs font-mono border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all leading-relaxed"
         />
 
@@ -188,25 +315,28 @@ export const DocumentInputPanel: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Action Bar: File Upload & AI Execute Button */}
+      {/* Action Bar: Smart File Upload (PDF, DOCX, TEX) & AI Execute Button */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-        {/* Upload File */}
-        <label className="inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl cursor-pointer transition-colors">
-          <Upload className="w-3.5 h-3.5 text-slate-500" />
-          <span>Tải file đề thi (.txt / .docx / .tex)</span>
-          <input
-            type="file"
-            accept=".txt,.doc,.docx,.tex"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-        </label>
+        {/* Upload File with support for PDF, DOCX, TEX */}
+        <div className="flex items-center gap-2">
+          <label className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl cursor-pointer border border-slate-300 transition-colors shadow-2xs">
+            <Upload className="w-4 h-4 text-blue-700" />
+            <span>{isReadingFile ? 'Đang đọc tệp...' : 'Tải lên PDF / Word (.docx) / LaTeX (.tex)'}</span>
+            <input
+              type="file"
+              accept=".pdf,.docx,.doc,.tex,.txt,.md"
+              onChange={handleFileUpload}
+              disabled={isReadingFile}
+              className="hidden"
+            />
+          </label>
+        </div>
 
         {/* AI Execute Button */}
         <button
           onClick={onRunAiProcessing}
-          disabled={isLoading || !rawText.trim()}
-          className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-900 to-indigo-900 hover:from-blue-950 hover:to-indigo-950 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          disabled={isLoading || isReadingFile || !rawText.trim()}
+          className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-900 via-indigo-900 to-amber-600 hover:from-blue-950 hover:to-indigo-950 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isLoading ? (
             <>
@@ -215,7 +345,7 @@ export const DocumentInputPanel: React.FC<Props> = ({
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 text-amber-400" />
+              <Sparkles className="w-4 h-4 text-amber-300" />
               <span>{enableAiSolve ? 'Tự động Trích xuất, Vẽ hình & Giải chi tiết' : 'Trích xuất & Bố trí Đề thi'}</span>
             </>
           )}
