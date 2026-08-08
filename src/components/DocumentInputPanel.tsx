@@ -40,6 +40,27 @@ declare global {
   }
 }
 
+// Dynamic script loader helper for PDF.js and Mammoth.js
+async function loadScriptIfNeeded(src: string, globalName: string): Promise<any> {
+  if ((window as any)[globalName]) {
+    return (window as any)[globalName];
+  }
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      existing.addEventListener('load', () => resolve((window as any)[globalName]));
+      existing.addEventListener('error', reject);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.onload = () => resolve((window as any)[globalName]);
+    script.onerror = () => reject(new Error(`Không thể tải script ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
 export const DocumentInputPanel: React.FC<Props> = ({
   rawText,
   onRawTextChange,
@@ -57,39 +78,46 @@ export const DocumentInputPanel: React.FC<Props> = ({
   const [selectedPresetIndex, setSelectedPresetIndex] = useState<number>(0);
   const [showMathPalette, setShowMathPalette] = useState<boolean>(true);
   const [isReadingFile, setIsReadingFile] = useState<boolean>(false);
-  const [fileStatusMsg, setFileStatusMsg] = useState<string | null>(null);
+  const [fileStatusMsg, setFileStatusMsg] = useState<{ text: string; isError?: boolean } | null>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsReadingFile(true);
-    setFileStatusMsg(`Đang đọc tệp ${file.name}...`);
+    setFileStatusMsg({ text: `Đang phân tích tệp: ${file.name}...` });
 
     const fileNameLower = file.name.toLowerCase();
 
     // 1. Handle DOCX File using Mammoth.js
     if (fileNameLower.endsWith('.docx') || fileNameLower.endsWith('.doc')) {
       try {
+        let mammothLib = window.mammoth;
+        if (!mammothLib) {
+          mammothLib = await loadScriptIfNeeded(
+            'https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js',
+            'mammoth'
+          );
+        }
+
         const arrayBuffer = await file.arrayBuffer();
-        if (window.mammoth) {
-          const result = await window.mammoth.extractRawText({ arrayBuffer });
-          const extractedText = result.value || '';
-          if (extractedText.trim().length > 0) {
+        if (mammothLib && mammothLib.extractRawText) {
+          const result = await mammothLib.extractRawText({ arrayBuffer });
+          const extractedText = (result?.value || '').trim();
+          if (extractedText.length > 0) {
             onRawTextChange(extractedText);
-            setFileStatusMsg(`✅ Đã trích xuất ${extractedText.length} ký tự từ file Word!`);
+            setFileStatusMsg({
+              text: `✅ Đã trích xuất thành công ${extractedText.length} ký tự từ file Word (${file.name})!`,
+            });
           } else {
-            throw new Error('File Word rỗng hoặc không có văn bản.');
+            throw new Error('File Word rỗng hoặc không chứa văn bản.');
           }
         } else {
-          // Fallback text reader if mammoth is not available
-          const text = await file.text();
-          onRawTextChange(text);
-          setFileStatusMsg(`Đã nạp file.`);
+          throw new Error('Thư viện xử lý Word chưa sẵn sàng.');
         }
       } catch (err: any) {
         console.error('Lỗi đọc Word DOCX:', err);
-        setFileStatusMsg(`Có lỗi khi đọc file Word: ${err.message}`);
+        setFileStatusMsg({ text: `Lỗi đọc file Word: ${err.message}`, isError: true });
       } finally {
         setIsReadingFile(false);
       }
@@ -99,9 +127,22 @@ export const DocumentInputPanel: React.FC<Props> = ({
     // 2. Handle PDF File using PDF.js
     if (fileNameLower.endsWith('.pdf')) {
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        if (window.pdfjsLib) {
-          const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+        let pdfjs = window.pdfjsLib || (window as any)['pdfjs-dist/build/pdf'];
+        if (!pdfjs) {
+          pdfjs = await loadScriptIfNeeded(
+            'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.min.js',
+            'pdfjsLib'
+          );
+        }
+
+        if (pdfjs) {
+          if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+            pdfjs.GlobalWorkerOptions.workerSrc =
+              'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
+          }
+
+          const arrayBuffer = await file.arrayBuffer();
+          const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
           const pdfDoc = await loadingTask.promise;
           let fullPdfText = '';
 
@@ -115,17 +156,19 @@ export const DocumentInputPanel: React.FC<Props> = ({
           }
 
           if (fullPdfText.trim().length > 0) {
-            onRawTextChange(fullPdfText);
-            setFileStatusMsg(`✅ Đã chuyển đổi ${pdfDoc.numPages} trang PDF sang văn bản Toán học!`);
+            onRawTextChange(fullPdfText.trim());
+            setFileStatusMsg({
+              text: `✅ Đã đọc thành công ${pdfDoc.numPages} trang PDF! Bạn có thể chỉnh sửa hoặc bấm Giải chi tiết ngay.`,
+            });
           } else {
-            throw new Error('File PDF scan dạng ảnh hoặc không chứa lớp văn bản.');
+            throw new Error('File PDF scan dạng ảnh không có lớp ký tự.');
           }
         } else {
-          setFileStatusMsg('Thư viện PDF.js chưa sẵn sàng.');
+          throw new Error('Không thể tải thư viện PDF.js. Vui lòng kiểm tra kết nối mạng.');
         }
       } catch (err: any) {
         console.error('Lỗi đọc PDF:', err);
-        setFileStatusMsg(`Lỗi đọc file PDF: ${err.message}`);
+        setFileStatusMsg({ text: `Lỗi đọc file PDF: ${err.message}`, isError: true });
       } finally {
         setIsReadingFile(false);
       }
@@ -134,22 +177,16 @@ export const DocumentInputPanel: React.FC<Props> = ({
 
     // 3. Handle Plain Text, LaTeX (.tex), Markdown
     try {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        if (text) {
-          onRawTextChange(text);
-          setFileStatusMsg(`✅ Đã nạp thành công file văn bản / LaTeX!`);
-        }
-        setIsReadingFile(false);
-      };
-      reader.onerror = () => {
-        setFileStatusMsg('Lỗi khi đọc file văn bản.');
-        setIsReadingFile(false);
-      };
-      reader.readAsText(file, 'UTF-8');
+      const text = await file.text();
+      if (text.trim().length > 0) {
+        onRawTextChange(text.trim());
+        setFileStatusMsg({ text: `✅ Đã nạp thành công file ${file.name} (${text.length} ký tự)!` });
+      } else {
+        setFileStatusMsg({ text: 'File rỗng.', isError: true });
+      }
     } catch (err: any) {
-      setFileStatusMsg(`Lỗi: ${err.message}`);
+      setFileStatusMsg({ text: `Lỗi đọc file: ${err.message}`, isError: true });
+    } finally {
       setIsReadingFile(false);
     }
   };
@@ -204,11 +241,20 @@ export const DocumentInputPanel: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* File status notice */}
+      {/* File status notice with clear coloring */}
       {fileStatusMsg && (
-        <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs font-semibold flex items-center justify-between">
-          <span>{fileStatusMsg}</span>
-          <button onClick={() => setFileStatusMsg(null)} className="text-slate-500 hover:text-slate-800 text-[10px]">
+        <div
+          className={`p-3 rounded-xl text-xs font-semibold flex items-center justify-between transition-all ${
+            fileStatusMsg.isError
+              ? 'bg-rose-50 border border-rose-200 text-rose-900'
+              : 'bg-emerald-50 border border-emerald-200 text-emerald-900'
+          }`}
+        >
+          <span>{fileStatusMsg.text}</span>
+          <button
+            onClick={() => setFileStatusMsg(null)}
+            className="text-slate-500 hover:text-slate-900 text-[11px] font-bold underline ml-3 shrink-0"
+          >
             Đóng
           </button>
         </div>
@@ -345,7 +391,7 @@ export const DocumentInputPanel: React.FC<Props> = ({
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 text-amber-300" />
+              <Sparkles className="w-4 h-4 text-amber-400" />
               <span>{enableAiSolve ? 'Tự động Trích xuất, Vẽ hình & Giải chi tiết' : 'Trích xuất & Bố trí Đề thi'}</span>
             </>
           )}

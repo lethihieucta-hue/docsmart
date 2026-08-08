@@ -15,6 +15,7 @@ import { StudentPracticeModal } from './components/StudentPracticeModal';
 import { AiExamPromptGeneratorModal } from './components/AiExamPromptGeneratorModal';
 import { exportToDocx } from './utils/docxExporter';
 import { exportToLatex } from './utils/latexExporter';
+import { processDocWithGemini } from './utils/geminiClient';
 import {
   Sparkles,
   BookOpen,
@@ -94,49 +95,39 @@ export default function App() {
     showToast(`Đã sinh thành công ${questions.length} câu hỏi theo cấu trúc mới!`);
   };
 
-  // Run AI Processing via Express Server /api/process-doc with Fallback Retry
+  // Run AI Processing via Direct Gemini Client with Fallback & Local Parsing
   const handleRunAiProcessing = async () => {
     if (!rawText.trim()) return;
 
     setIsLoading(true);
     setApiError(null);
-    const userApiKey = localStorage.getItem('user_gemini_api_key') || '';
-    const userModel = localStorage.getItem('user_gemini_model') || 'gemini-3-flash-preview';
 
     try {
-      const res = await fetch('/api/process-doc', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rawText,
-          subject: docData.header.subject,
-          templateId: docData.templateId,
-          enableAiSolve: docData.enableAiSolve,
-          apiKey: userApiKey,
-          model: userModel,
-        }),
-      });
+      const result = await processDocWithGemini(
+        rawText,
+        docData.header.subject,
+        docData.templateId,
+        docData.enableAiSolve
+      );
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error || `HTTP ${res.status}: Lỗi kết nối API`);
-      }
-
-      const data = await res.json();
-      if (data.questions && Array.isArray(data.questions)) {
+      if (result.questions && result.questions.length > 0) {
         setDocData((prev) => ({
           ...prev,
-          questions: data.questions,
+          questions: result.questions,
           rawText,
         }));
         setApiError(null);
-        showToast(`AI đã trích xuất & giải thành công ${data.questions.length} câu hỏi Toán!`);
+        showToast(`AI (${result.modelUsed}) đã trích xuất & giải thành công ${result.questions.length} câu hỏi!`);
       }
     } catch (err: any) {
-      console.error('All AI models failed:', err);
-      const errMsg = err.message || '429 RESOURCE_EXHAUSTED / Lỗi kết nối API';
+      console.error('All Gemini AI calls failed:', err);
+      const errMsg = err.message || 'Lỗi kết nối API hoặc hết hạn mức Quota.';
       setApiError(errMsg);
       showToast(`Lỗi: ${errMsg}`);
+
+      if (errMsg.includes('API_KEY_MISSING')) {
+        setIsApiKeyModalOpen(true);
+      }
 
       // Fallback local parsing logic
       const lines = rawText.split('\n').filter((l) => l.trim().length > 0);

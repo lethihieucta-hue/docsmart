@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ExamPromptConfig, QuestionItem } from '../types';
+import { generateExamByPromptWithGemini } from '../utils/geminiClient';
 import {
   Sparkles,
   Wand2,
@@ -59,37 +60,27 @@ export const AiExamPromptGeneratorModal: React.FC<Props> = ({
     setIsGenerating(true);
     setErrorMsg(null);
 
-    const userApiKey = localStorage.getItem('user_gemini_api_key') || '';
-    const userModel = localStorage.getItem('user_gemini_model') || 'gemini-3-flash-preview';
-
     try {
-      const res = await fetch('/api/generate-exam-by-prompt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...config,
-          apiKey: userApiKey,
-          model: userModel,
-        }),
-      });
+      const result = await generateExamByPromptWithGemini(
+        config.topic,
+        config.gradeLevel,
+        config.mcCount,
+        config.tfCount,
+        config.shortAnswerCount,
+        config.essayCount
+      );
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error || 'Lỗi khi yêu cầu AI tạo đề.');
-      }
-
-      const data = await res.json();
-      if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
-        onExamGenerated(data.questions, config.topic);
+      if (result.questions && result.questions.length > 0) {
+        onExamGenerated(result.questions, config.topic);
         onClose();
       } else {
-        throw new Error('Không nhận được câu hỏi hợp lệ từ AI.');
+        throw new Error('Không nhận được câu hỏi từ AI.');
       }
     } catch (err: any) {
-      console.warn('Fallback generating intelligent prompt math exam...', err);
-      setErrorMsg(err.message || 'Lỗi kết nối AI. Đang tạo bộ đề mẫu tự động theo cấu trúc...');
+      console.warn('Lỗi AI tạo đề, áp dụng fallback thông minh...', err);
+      setErrorMsg(err.message || 'Lỗi kết nối AI. Đang tạo đề mẫu theo ma trận...');
 
-      // Local fallback generation
+      // Resilient fallback generation
       setTimeout(() => {
         const fallbackQs: QuestionItem[] = [];
         let qCount = 1;
@@ -101,7 +92,7 @@ export const AiExamPromptGeneratorModal: React.FC<Props> = ({
             number: qCount++,
             type: 'multiple_choice',
             cognitiveLevel: i < 2 ? 'NB' : 'TH',
-            questionText: `Cho hàm số $y = f(x) = x^3 - 3x^2 + 2$. Điểm cực đại của đồ thị hàm số là:`,
+            questionText: `Cho hàm số bậc ba $y = f(x) = x^3 - 3x^2 + 2$ có đồ thị $(C)$. Tọa độ điểm cực đại của đồ thị hàm số là:`,
             options: [
               'A. $M(0; 2)$',
               'B. $N(2; -2)$',
@@ -109,8 +100,8 @@ export const AiExamPromptGeneratorModal: React.FC<Props> = ({
               'D. $Q(-1; -2)$',
             ],
             answerKey: 'A',
-            solution: `Ta có $y' = 3x^2 - 6x = 3x(x - 2)$.\nCho $y' = 0 \\Leftrightarrow x = 0$ hoặc $x = 2$.\nBảng xét dấu $y'$ cho thấy hàm số đạt cực đại tại $x = 0 \\Rightarrow y(0) = 2$. Do đó điểm cực đại là $M(0; 2)$.`,
-            keyMethod: 'Tính đạo hàm $y\'=0$, lập bảng xét dấu và tìm điểm cực trị.',
+            solution: `Ta có $y' = 3x^2 - 6x = 3x(x - 2)$. Cho $y' = 0 \\Leftrightarrow x = 0$ hoặc $x = 2$.\nBảng xét dấu $y'$ cho thấy hàm số đạt cực đại tại $x = 0 \\Rightarrow y(0) = 2$. Do đó điểm cực đại là $M(0; 2)$.`,
+            keyMethod: 'Tính đạo hàm $y\'=0$, lập bảng xét dấu và tìm tọa độ cực trị.',
             spaceType: 'none',
             calculatedLines: 0,
             difficulty: 'easy',
@@ -125,7 +116,7 @@ export const AiExamPromptGeneratorModal: React.FC<Props> = ({
             number: qCount++,
             type: 'true_false_group',
             cognitiveLevel: 'VD',
-            questionText: `Cho hàm số bậc ba $y = f(x) = ax^3 + bx^2 + cx + d$ có đồ thị như hình vẽ với hai điểm cực trị là $x_1 = 0, x_2 = 2$. Xét tính đúng/sai của các khẳng định sau:`,
+            questionText: `Cho hàm số bậc ba $y = f(x) = ax^3 + bx^2 + cx + d$ có đồ thị với hai điểm cực trị $x_1 = 0, x_2 = 2$. Xét tính Đúng/Sai của các khẳng định sau:`,
             tfItems: [
               {
                 id: `tf_a_${i}`,
@@ -139,7 +130,7 @@ export const AiExamPromptGeneratorModal: React.FC<Props> = ({
                 letter: 'b',
                 statement: 'Hàm số đạt cực tiểu tại điểm $x = 0$.',
                 isCorrect: false,
-                explanation: 'Sai vì tại $x=0$ đồ thị đạt điểm uốn / cực đại chứ không phải cực tiểu.',
+                explanation: 'Sai vì tại $x=0$ đồ thị đạt cực đại chứ không phải cực tiểu.',
               },
               {
                 id: `tf_c_${i}`,
@@ -213,7 +204,7 @@ export const AiExamPromptGeneratorModal: React.FC<Props> = ({
         onExamGenerated(fallbackQs, config.topic);
         onClose();
         setIsGenerating(false);
-      }, 800);
+      }, 600);
     }
   };
 
