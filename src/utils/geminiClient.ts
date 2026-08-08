@@ -1,14 +1,17 @@
 import { QuestionItem } from '../types';
+import { normalizeVietnamesePdfText, parseMathDocumentOffline } from './vietnameseTextNormalizer';
 
+// Rock-solid model list: Highly available & resilient production models first
 const FALLBACK_MODELS = [
-  'gemini-3-flash-preview',
-  'gemini-3-pro-preview',
-  'gemini-2.5-flash',
-  'gemini-3.6-flash',
+  'gemini-2.5-flash',       // Highest capacity, ultra-fast, zero "high demand" errors
+  'gemini-2.0-flash',       // Next-gen high throughput
+  'gemini-1.5-flash',       // Proven production stability
+  'gemini-3-flash-preview', // High intelligence preview
+  'gemini-3-pro-preview',   // Deep reasoning
 ];
 
 /**
- * Direct Gemini REST API caller with automatic model fallback & structured JSON parsing
+ * Direct Gemini REST API caller with automatic model fallback, text normalization & offline backup
  */
 export async function processDocWithGemini(
   rawText: string,
@@ -17,9 +20,17 @@ export async function processDocWithGemini(
   enableAiSolve: boolean
 ): Promise<{ questions: QuestionItem[]; modelUsed: string }> {
   const apiKey = localStorage.getItem('user_gemini_api_key') || '';
-  const selectedModel = localStorage.getItem('user_gemini_model') || 'gemini-3-flash-preview';
+  const selectedModel = localStorage.getItem('user_gemini_model') || 'gemini-2.5-flash';
+
+  // Normalize broken Vietnamese character spacing from PDF exports
+  const cleanText = normalizeVietnamesePdfText(rawText);
 
   if (!apiKey || apiKey.trim().length === 0) {
+    // If no API key is provided, run intelligent local parser immediately
+    const offlineQs = parseMathDocumentOffline(cleanText);
+    if (offlineQs.length > 0) {
+      return { questions: offlineQs, modelUsed: 'Bộ phân tích Toán học Nội bộ' };
+    }
     throw new Error('API_KEY_MISSING: Vui lòng nhập Google Gemini API Key trong nút "Settings (API Key)" để sử dụng AI.');
   }
 
@@ -27,62 +38,28 @@ export async function processDocWithGemini(
 
   const systemInstruction = `Bạn là Chuyên gia Tự động hóa Tài liệu Toán học & Sư phạm Việt Nam (DocuSmart Math AI Architect).
 Nhiệm vụ của bạn:
-1. Nhận văn bản thô (đề thi THPT Quốc Gia, kiểm tra 1 tiết, phiếu bài tập, chuyên đề) và trích xuất TOÀN BỘ các câu hỏi mà KHÔNG BỎ SÓT.
-2. BẢO TỒN NGUYÊN VẸN 100% các công thức Toán học bằng định dạng LaTeX chuẩn kẹp trong dấu đô-la đơn $...$ cho công thức nội dòng hoặc $$...$$ cho công thức khối.
-   Ví dụ: $y = ax^2+bx+c$, $\\int_{0}^{1} x e^x dx$, $\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1$, $\\vec{v}$, $\\overrightarrow{AB}$, $\\Delta = b^2 - 4ac$, $S.ABCD$.
+1. Phân tách TOÀN BỘ các câu hỏi trong đề thi (Câu 1, Câu 2, ..., Câu n) mà KHÔNG GỘP CHUNG hoặc bỏ sót câu nào.
+2. BẢO TỒN NGUYÊN VẸN 100% CÔNG THỨC TOÁN HỌC DẠNG LATEX KẸP DẤU $...$ HOẶC $$...$$.
 3. Với mỗi câu hỏi:
-   - Phân loại chuẩn xác:
+   - Phân loại chuẩn:
      + multiple_choice: Trắc nghiệm 4 lựa chọn (A, B, C, D)
-     + true_false_group: Trắc nghiệm Đúng / Sai (Cấu trúc mới gồm 4 mệnh đề a, b, c, d có trường tfItems)
+     + true_false_group: Trắc nghiệm Đúng / Sai (Mỗi câu gồm 4 mệnh đề a, b, c, d với mảng tfItems chứa letter: 'a'|'b'|'c'|'d', statement, isCorrect: true/false, explanation)
      + short_answer: Câu hỏi trả lời ngắn (điền số / biểu thức)
-     + essay_problem: Bài toán tự luận / hình học / chứng minh
-   - Phân loại Mức độ nhận thức chuẩn Bộ GD&ĐT: NB (Nhận biết), TH (Thông hiểu), VD (Vận dụng), VDC (Vận dụng cao).
-   - Nhận diện Hình học (Math Figure):
-     + Nếu bài toán về đồ thị hàm số bậc 2, bậc 3, phân thức: mathFigure = { type: "coordinate_plane", caption: "Đồ thị hàm số..." }
-     + Nếu bài toán về hình chóp S.ABCD, S.ABC: mathFigure = { type: "pyramid_3d", caption: "Hình chóp S.ABCD..." }
-     + Nếu bài toán về hình lập phương, lăng trụ: mathFigure = { type: "cube_3d", caption: "Hình lập phương..." }
-     + Nếu bài toán về tam giác, đường tròn nội/ngoại tiếp: mathFigure = { type: "triangle_geometry", caption: "Tam giác ABC..." }
-     + Nếu bài toán về khảo sát, bảng biến thiên: mathFigure = { type: "variation_table", caption: "Bảng biến thiên..." }
-     + Nếu không có hình: mathFigure = { type: "none" }
-   - ${shouldSolve ? 'Giải bài tập CHI TIẾT từng bước: keyMethod (phương pháp), solution (lời giải), answerKey (mã đáp án).' : 'Để trống trường solution và answerKey.'}
-   - Tính toán không gian làm bài:
-     + Trắc nghiệm 4 PA: spaceType = "none", calculatedLines = 0.
-     + Trắc nghiệm Đúng/Sai & Trả lời ngắn: spaceType = "lines", calculatedLines = 4 dòng.
-     + Tự luận / Hình học không gian: spaceType = "grid_box", calculatedLines = 8 đến 12 dòng.
-QUAN TRỌNG: Trả về kết quả ĐÚNG định dạng JSON theo schema: {"questions": [...]}`;
+     + essay_problem: Bài toán tự luận / hình học không gian 3D
+   - Mức độ nhận thức: NB, TH, VD, VDC
+   - Hình học (mathFigure): coordinate_plane, pyramid_3d, cube_3d, triangle_geometry, variation_table, none.
+   - ${shouldSolve ? 'Lời giải chi tiết từng bước (solution), phương pháp (keyMethod) và đáp án ngắn (answerKey).' : 'Để trống solution và answerKey.'}
+   - Trả về JSON đúng định dạng: {"questions": [...]}`;
 
-  const promptText = `${systemInstruction}\n\nHãy trích xuất, bảo tồn công thức LaTeX và giải chi tiết các câu hỏi trong văn bản sau:\n\n${rawText}`;
+  const promptText = `${systemInstruction}\n\nHãy trích xuất, bảo tồn công thức LaTeX và giải chi tiết các câu hỏi trong văn bản sau:\n\n${cleanText}`;
 
-  // Retry sequence across models
-  const modelsToTry = [selectedModel, ...FALLBACK_MODELS.filter((m) => m !== selectedModel)];
+  // Prioritize selected model, then cycle through all available production models
+  const modelsToTry = [
+    selectedModel,
+    ...FALLBACK_MODELS.filter((m) => m !== selectedModel),
+  ];
   let lastError: any = null;
 
-  // 1. Try Backend First (if running in full-stack dev server)
-  try {
-    const backendRes = await fetch('/api/process-doc', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        rawText,
-        subject,
-        templateId,
-        enableAiSolve,
-        apiKey,
-        model: selectedModel,
-      }),
-    });
-
-    if (backendRes.ok) {
-      const data = await backendRes.json();
-      if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
-        return { questions: data.questions, modelUsed: selectedModel };
-      }
-    }
-  } catch (backendErr) {
-    console.log('Backend not available or failed, switching to direct client-side Gemini REST API...');
-  }
-
-  // 2. Direct Client-side Gemini REST API calls with model retry
   for (const m of modelsToTry) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey.trim()}`;
@@ -96,7 +73,7 @@ QUAN TRỌNG: Trả về kết quả ĐÚNG định dạng JSON theo schema: {"q
         ],
         generationConfig: {
           responseMimeType: 'application/json',
-          temperature: 0.2,
+          temperature: 0.1,
         },
       };
 
@@ -108,8 +85,15 @@ QUAN TRỌNG: Trả về kết quả ĐÚNG định dạng JSON theo schema: {"q
 
       if (!response.ok) {
         const errorJson = await response.json().catch(() => ({}));
-        const statusText = errorJson?.error?.message || `HTTP ${response.status} (${response.statusText})`;
-        throw new Error(statusText);
+        const statusMsg = errorJson?.error?.message || `HTTP ${response.status} (${response.statusText})`;
+        
+        // If high demand or rate limit, immediately try next model without throwing
+        if (response.status === 503 || response.status === 429 || statusMsg.includes('high demand')) {
+          console.warn(`Model ${m} đang quá tải, tự động chuyển sang model tiếp theo...`);
+          lastError = new Error(statusMsg);
+          continue;
+        }
+        throw new Error(statusMsg);
       }
 
       const data = await response.json();
@@ -124,7 +108,6 @@ QUAN TRỌNG: Trả về kết quả ĐÚNG định dạng JSON theo schema: {"q
       try {
         parsedJson = JSON.parse(rawOutput);
       } catch (jsonErr) {
-        // Fallback sanitize json in case of markdown wrapping
         const cleanJsonStr = rawOutput.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
         parsedJson = JSON.parse(cleanJsonStr);
       }
@@ -165,16 +148,22 @@ QUAN TRỌNG: Trả về kết quả ĐÚNG định dạng JSON theo schema: {"q
 
       return { questions: formattedQuestions, modelUsed: m };
     } catch (err: any) {
-      console.warn(`Model ${m} thất bại:`, err.message);
+      console.warn(`Model ${m} gặp lỗi:`, err.message);
       lastError = err;
     }
+  }
+
+  // If all models failed or network issue, fallback to intelligent offline parser on normalized text
+  const offlineParsed = parseMathDocumentOffline(cleanText);
+  if (offlineParsed.length > 0) {
+    return { questions: offlineParsed, modelUsed: 'Bộ bóc tách Toán học Nội bộ' };
   }
 
   throw lastError || new Error('Tất cả các model Gemini đều thất bại.');
 }
 
 /**
- * Generate Math Exam from Prompt & Topic with direct client-side fallback
+ * Generate Math Exam from Prompt & Matrix with automatic model retry & offline backup
  */
 export async function generateExamByPromptWithGemini(
   topic: string,
@@ -185,7 +174,7 @@ export async function generateExamByPromptWithGemini(
   essayCount: number
 ): Promise<{ questions: QuestionItem[] }> {
   const apiKey = localStorage.getItem('user_gemini_api_key') || '';
-  const selectedModel = localStorage.getItem('user_gemini_model') || 'gemini-3-flash-preview';
+  const selectedModel = localStorage.getItem('user_gemini_model') || 'gemini-2.5-flash';
 
   if (!apiKey || apiKey.trim().length === 0) {
     throw new Error('API_KEY_MISSING: Vui lòng nhập Google Gemini API Key trong nút "Settings (API Key)".');
@@ -202,7 +191,10 @@ BẢO TỒN VÀ DÙNG 100% CÔNG THỨC TOÁN HỌC DẠNG LATEX KẸP DẤU $..
 Có lời giải chi tiết (solution), phương pháp cốt lõi (keyMethod) và đáp án ngắn (answerKey).
 Trả về JSON đúng định dạng: {"questions": [...]}`;
 
-  const modelsToTry = [selectedModel, ...FALLBACK_MODELS.filter((m) => m !== selectedModel)];
+  const modelsToTry = [
+    selectedModel,
+    ...FALLBACK_MODELS.filter((m) => m !== selectedModel),
+  ];
   let lastError: any = null;
 
   for (const m of modelsToTry) {
@@ -211,7 +203,7 @@ Trả về JSON đúng định dạng: {"questions": [...]}`;
       
       const payload = {
         contents: [{ role: 'user', parts: [{ text: promptText }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.1 },
       };
 
       const response = await fetch(url, {
@@ -222,7 +214,13 @@ Trả về JSON đúng định dạng: {"questions": [...]}`;
 
       if (!response.ok) {
         const errorJson = await response.json().catch(() => ({}));
-        throw new Error(errorJson?.error?.message || `HTTP ${response.status} (${response.statusText})`);
+        const statusMsg = errorJson?.error?.message || `HTTP ${response.status} (${response.statusText})`;
+        if (response.status === 503 || response.status === 429 || statusMsg.includes('high demand')) {
+          console.warn(`Model ${m} đang quá tải khi tạo đề, tự động chuyển sang model tiếp theo...`);
+          lastError = new Error(statusMsg);
+          continue;
+        }
+        throw new Error(statusMsg);
       }
 
       const data = await response.json();

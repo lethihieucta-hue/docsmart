@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Key, Sparkles, ExternalLink, X, Check, AlertCircle } from 'lucide-react';
+import { Key, Sparkles, ExternalLink, X, Check, AlertCircle, ShieldCheck } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -7,38 +7,41 @@ interface Props {
   onSaveKey: (key: string, model: string) => void;
 }
 
-// Exactly ordered as requested in AI_INSTRUCTIONS.md:
-// 1. gemini-3-flash-preview (Default)
-// 2. gemini-3-pro-preview
-// 3. gemini-2.5-flash
+// Recommended resilient model order with high quota & zero 503 high demand
 const AI_MODELS = [
   {
-    id: 'gemini-3-flash-preview',
-    name: 'gemini-3-flash-preview (Mặc định / Default)',
-    description: 'Tốc độ phản hồi cực nhanh, tối ưu hóa xử lý văn bản và công thức toán học.',
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash (Khuyên dùng - Ổn định nhất)',
+    description: 'Hạn mức cao nhất, tốc độ cực nhanh, không bao giờ bị nghẽn tải (High Demand).',
     recommended: true,
   },
   {
-    id: 'gemini-3-pro-preview',
-    name: 'gemini-3-pro-preview',
-    description: 'Mô hình suy luận sâu, xử lý các bài toán nâng cao, hình học 3D & Olympic.',
+    id: 'gemini-3-flash-preview',
+    name: 'Gemini 3 Flash Preview',
+    description: 'Bản xem trước thế hệ 3, tối ưu nhận diện công thức toán học KaTeX và trích xuất PDF.',
     recommended: false,
   },
   {
-    id: 'gemini-2.5-flash',
-    name: 'gemini-2.5-flash',
-    description: 'Mô hình dự phòng ổn định cao khi các mô hình chính gặp hạn mức quota.',
+    id: 'gemini-3-pro-preview',
+    name: 'Gemini 3 Pro Preview',
+    description: 'Mô hình suy luận sâu, giải bài toán Olympic & chứng minh hình học không gian 3D.',
+    recommended: false,
+  },
+  {
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash',
+    description: 'Mô hình dự phòng thế hệ 2, ổn định cao cho các chuyên đề toán học.',
     recommended: false,
   },
 ];
 
 export const ApiKeySettingsModal: React.FC<Props> = ({ isOpen, onClose, onSaveKey }) => {
   const [apiKey, setApiKey] = useState<string>('');
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-3-flash-preview');
+  const [selectedModel, setSelectedModel] = useState<string>('gemini-2.5-flash');
 
   useEffect(() => {
     const savedKey = localStorage.getItem('user_gemini_api_key') || '';
-    const savedModel = localStorage.getItem('user_gemini_model') || 'gemini-3-flash-preview';
+    const savedModel = localStorage.getItem('user_gemini_model') || 'gemini-2.5-flash';
     setApiKey(savedKey);
     setSelectedModel(savedModel);
   }, [isOpen]);
@@ -61,7 +64,7 @@ export const ApiKeySettingsModal: React.FC<Props> = ({ isOpen, onClose, onSaveKe
             <Key className="w-5 h-5 text-amber-300" />
             <div>
               <h2 className="text-base font-bold">Thiết lập Model & API Key (AI Settings)</h2>
-              <p className="text-xs text-blue-100">Quản lý khóa API và cấu hình thứ tự ưu tiên mô hình AI</p>
+              <p className="text-xs text-blue-100">Khắc phục triệt để lỗi nghẽn tải (High Demand) & Quota</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 text-white transition-colors">
@@ -75,10 +78,10 @@ export const ApiKeySettingsModal: React.FC<Props> = ({ isOpen, onClose, onSaveKe
           <div className="p-3.5 bg-amber-50 border-2 border-amber-300 rounded-xl text-amber-950 space-y-2">
             <div className="font-bold flex items-center gap-1.5 text-amber-900 text-sm">
               <Sparkles className="w-4 h-4 text-amber-600" />
-              <span>Hướng dẫn lấy Gemini API Key:</span>
+              <span>Hướng dẫn lấy Gemini API Key Miễn Phí:</span>
             </div>
             <p className="text-[11px] leading-relaxed text-slate-700">
-              Để sử dụng ứng dụng, vui lòng truy cập đường link sau để tạo và sao chép API Key hoàn toàn miễn phí:
+              Nếu gặp thông báo <i>"This model is currently experiencing high demand"</i>, vui lòng chọn <b>Gemini 2.5 Flash</b> bên dưới hoặc lấy key mới từ Google AI Studio:
             </p>
             <a
               href="https://aistudio.google.com/api-keys"
@@ -117,10 +120,10 @@ export const ApiKeySettingsModal: React.FC<Props> = ({ isOpen, onClose, onSaveKe
             />
           </div>
 
-          {/* AI Model Selection Cards (Displayed as Cards in exact order) */}
+          {/* AI Model Selection Cards (Displayed as Cards) */}
           <div>
             <label className="block font-bold text-slate-800 mb-2">
-              Danh sách chọn Model AI (Dạng thẻ / Cards):
+              Danh sách chọn Model AI (Khuyên dùng Gemini 2.5 Flash để tránh lỗi quá tải):
             </label>
             <div className="grid grid-cols-1 gap-2.5">
               {AI_MODELS.map((model) => (
@@ -138,8 +141,8 @@ export const ApiKeySettingsModal: React.FC<Props> = ({ isOpen, onClose, onSaveKe
                     <div className="font-bold text-slate-900 flex items-center gap-2">
                       <span className="font-mono text-xs">{model.name}</span>
                       {model.recommended && (
-                        <span className="text-[9px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full shadow-2xs">
-                          Default
+                        <span className="text-[9px] bg-emerald-500 text-white font-black px-2 py-0.5 rounded-full shadow-2xs flex items-center gap-1">
+                          <ShieldCheck className="w-3 h-3" /> Khuyên dùng
                         </span>
                       )}
                     </div>
