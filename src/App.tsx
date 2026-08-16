@@ -340,52 +340,60 @@ export default function App() {
       {/* MAIN CONTENT AREA */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* SECTION 1: RAW DOCUMENT INTAKE */}
-        <DocumentInputPanel
-          rawText={rawText}
-          onRawTextChange={setRawText}
-          onRunAiProcessing={handleRunAiProcessing}
-          onOpenPromptGenerator={() => setIsPromptGeneratorOpen(true)}
-          isLoading={isLoading}
-          onSelectPreset={handleSelectPreset}
-          enableAiSolve={docData.enableAiSolve}
-          onToggleEnableAiSolve={(val) => setDocData((prev) => ({ ...prev, enableAiSolve: val }))}
-          workingSpaceMode={docData.workingSpaceMode}
-          onChangeWorkingSpaceMode={(mode) => setDocData((prev) => ({ ...prev, workingSpaceMode: mode }))}
-          questionBoxStyle={docData.globalQuestionBoxStyle}
-          onChangeQuestionBoxStyle={(style) => setDocData((prev) => ({ ...prev, globalQuestionBoxStyle: style }))}
-        />
+        <div id="input-panel-section" className="print:hidden">
+          <DocumentInputPanel
+            rawText={rawText}
+            onRawTextChange={setRawText}
+            onRunAiProcessing={handleRunAiProcessing}
+            onOpenPromptGenerator={() => setIsPromptGeneratorOpen(true)}
+            isLoading={isLoading}
+            onSelectPreset={handleSelectPreset}
+            enableAiSolve={docData.enableAiSolve}
+            onToggleEnableAiSolve={(val) => setDocData((prev) => ({ ...prev, enableAiSolve: val }))}
+            workingSpaceMode={docData.workingSpaceMode}
+            onChangeWorkingSpaceMode={(mode) => setDocData((prev) => ({ ...prev, workingSpaceMode: mode }))}
+            questionBoxStyle={docData.globalQuestionBoxStyle}
+            onChangeQuestionBoxStyle={(style) => setDocData((prev) => ({ ...prev, globalQuestionBoxStyle: style }))}
+          />
+        </div>
 
         {/* SECTION 2: TEMPLATE SELECTOR */}
-        <TemplateSelector
-          selectedTemplateId={docData.templateId}
-          onSelectTemplate={handleSelectTemplate}
-        />
+        <div id="template-selector-section" className="print:hidden">
+          <TemplateSelector
+            selectedTemplateId={docData.templateId}
+            onSelectTemplate={handleSelectTemplate}
+          />
+        </div>
 
         {/* SECTION 3: AI STATUS & OUTPUT REPORT */}
-        <AiStatusOutputPanel
-          docData={docData}
-          apiError={apiError}
-          onExportDocx={handleExportDocx}
-          onExportLatex={handleExportLatex}
-          onPrintPdf={handlePrintPdf}
-          onOpenHeaderFooterModal={() => setIsHeaderFooterModalOpen(true)}
-          onOpenExamShuffler={() => setIsShufflerModalOpen(true)}
-          onOpenPresentation={() => setIsPresentationOpen(true)}
-          onOpenStudentPractice={() => setIsStudentPracticeOpen(true)}
-        />
+        <div id="ai-status-section" className="print:hidden">
+          <AiStatusOutputPanel
+            docData={docData}
+            apiError={apiError}
+            onExportDocx={handleExportDocx}
+            onExportLatex={handleExportLatex}
+            onPrintPdf={handlePrintPdf}
+            onOpenHeaderFooterModal={() => setIsHeaderFooterModalOpen(true)}
+            onOpenExamShuffler={() => setIsShufflerModalOpen(true)}
+            onOpenPresentation={() => setIsPresentationOpen(true)}
+            onOpenStudentPractice={() => setIsStudentPracticeOpen(true)}
+          />
+        </div>
 
         {/* SECTION 4: LIVE PRINT DOCUMENT PREVIEW */}
-        <DocumentLivePreview
-          docData={docData}
-          onUpdateDocData={setDocData}
-          onEditQuestion={(q) => setEditingQuestion(q)}
-          onExportDocx={handleExportDocx}
-          onExportLatex={handleExportLatex}
-          onPrintPdf={handlePrintPdf}
-          onOpenExamShuffler={() => setIsShufflerModalOpen(true)}
-          onOpenPresentation={() => setIsPresentationOpen(true)}
-          onOpenStudentPractice={() => setIsStudentPracticeOpen(true)}
-        />
+        <div id="preview-section">
+          <DocumentLivePreview
+            docData={docData}
+            onUpdateDocData={setDocData}
+            onEditQuestion={(q) => setEditingQuestion(q)}
+            onExportDocx={handleExportDocx}
+            onExportLatex={handleExportLatex}
+            onPrintPdf={handlePrintPdf}
+            onOpenExamShuffler={() => setIsShufflerModalOpen(true)}
+            onOpenPresentation={() => setIsPresentationOpen(true)}
+            onOpenStudentPractice={() => setIsStudentPracticeOpen(true)}
+          />
+        </div>
       </main>
 
       {/* FOOTER BAR */}

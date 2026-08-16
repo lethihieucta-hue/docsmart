@@ -227,7 +227,10 @@ export const DocumentLivePreview: React.FC<Props> = ({
       </div>
 
       {/* A4 SIMULATED PAGE CONTAINER */}
-      <div className="flex justify-center bg-slate-200/80 p-4 sm:p-8 rounded-2xl overflow-x-auto min-h-[800px]">
+      <div
+        id="printable-a4-container"
+        className="flex justify-center bg-slate-200/80 p-4 sm:p-8 rounded-2xl overflow-x-auto min-h-[800px] print:p-0 print:m-0 print:bg-transparent print:min-h-0 print:overflow-visible print:shadow-none"
+      >
         <div
           id="printable-a4-document"
           className="w-[210mm] min-h-[297mm] bg-white text-slate-900 p-[15mm] sm:p-[18mm] shadow-2xl rounded-xs flex flex-col justify-between relative print:shadow-none print:w-full print:p-0 print:m-0 font-vietnam-pro"
@@ -550,7 +553,7 @@ export const DocumentLivePreview: React.FC<Props> = ({
                 return (
                   <div
                     key={q.id}
-                    className={baseContainerClass + ' relative overflow-hidden'}
+                    className={baseContainerClass + ' relative overflow-hidden question-card page-break-inside-avoid'}
                     style={{
                       borderColor: theme.primaryColor,
                       backgroundColor: theme.primaryBg,
