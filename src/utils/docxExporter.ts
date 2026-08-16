@@ -74,6 +74,7 @@ export function cleanMathForDocx(text: string | undefined): string {
   s = s.replace(/\\cup\b/g, '∪');
   s = s.replace(/\\cap\b/g, '∩');
   s = s.replace(/\\emptyset\b/g, '∅');
+  s = s.replace(/\\setminus\b/g, ' \\ ');
   s = s.replace(/\\forall\b/g, '∀');
   s = s.replace(/\\exists\b/g, '∃');
   s = s.replace(/\\rightarrow\b|\\to\b/g, '→');
@@ -147,104 +148,63 @@ export async function exportToDocx(docData: DocumentData) {
   const { header, footer, questions, showAnswerKey, title, templateId } = docData;
   const theme = TEMPLATE_THEMES[templateId] || TEMPLATE_THEMES.thpt_national;
 
-  const primaryColorHex = cleanHex(theme.primaryColor, '1E3A8A');
+  const primaryColorHex = cleanHex(theme.primaryColor, '0F172A');
   const accentColorHex = cleanHex(theme.accentColor, 'D97706');
   const primaryBgHex = cleanHex(theme.primaryBg, 'FFFFFF');
   const slateDarkHex = '0F172A';
   const emeraldHex = '059669';
   const roseHex = 'DC2626';
 
-  // ==========================================
-  // 1. TOP HEADER BANNER (Bảng màu nhận diện thương hiệu)
-  // ==========================================
-  const bannerTable = new Table({
+  // =========================================================================
+  // 1. SLEEK TOP BANNER BAR (Khung dải ruy-băng trên cùng tách riêng bo góc)
+  // [ 🎓 CÓ HỌC MỚI THÀNH TÀI – MIỆT MÀI MỚI THÀNH GIỎI        TRƯỜNG THPT CHÂU THÀNH A ]
+  // =========================================================================
+  const topSloganTable = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     borders: {
-      top: { style: BorderStyle.SINGLE, size: 8, color: primaryColorHex },
-      bottom: { style: BorderStyle.SINGLE, size: 8, color: primaryColorHex },
-      left: { style: BorderStyle.SINGLE, size: 8, color: primaryColorHex },
-      right: { style: BorderStyle.SINGLE, size: 8, color: primaryColorHex },
+      top: { style: BorderStyle.SINGLE, size: 6, color: primaryColorHex },
+      bottom: { style: BorderStyle.SINGLE, size: 6, color: primaryColorHex },
+      left: { style: BorderStyle.SINGLE, size: 6, color: primaryColorHex },
+      right: { style: BorderStyle.SINGLE, size: 6, color: primaryColorHex },
       insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
-      insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'FFFFFF' },
+      insideVertical: { style: BorderStyle.NONE, size: 0, color: 'auto' },
     },
     rows: [
       new TableRow({
         children: [
-          // Left Banner Cell (School & Quote)
+          // Left: Motto/Quote with Graduation Cap
           new TableCell({
-            width: { size: 65, type: WidthType.PERCENTAGE },
+            width: { size: 62, type: WidthType.PERCENTAGE },
             shading: { fill: primaryColorHex },
-            margins: { top: 120, bottom: 120, left: 160, right: 160 },
+            margins: { top: 90, bottom: 90, left: 160, right: 100 },
             children: [
               new Paragraph({
                 children: [
                   new TextRun({
-                    text: (header.schoolName || 'TRƯỜNG THPT CHÂU THÀNH A').toUpperCase(),
-                    bold: true,
-                    size: 22,
-                    color: 'FFFFFF',
-                  }),
-                ],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: header.departmentName || 'TỔ TOÁN - TIN HỌC',
-                    bold: true,
-                    size: 19,
-                    color: 'FEF08A',
-                  }),
-                ],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: `"${header.quote || 'CÓ HỌC MỚI THÀNH TÀI – MIỆT MÀI MỚI THÀNH GIỎI'}"`,
-                    italics: true,
-                    size: 17,
-                    color: 'E2E8F0',
-                  }),
-                ],
-              }),
-            ],
-          }),
-
-          // Right Banner Cell (Teacher & Exam Code)
-          new TableCell({
-            width: { size: 35, type: WidthType.PERCENTAGE },
-            shading: { fill: primaryColorHex },
-            margins: { top: 120, bottom: 120, left: 160, right: 160 },
-            children: [
-              new Paragraph({
-                alignment: AlignmentType.RIGHT,
-                children: [
-                  new TextRun({
-                    text: `GV: ${footer.teacherName || 'Ths Lê Thị Hiếu'}`,
+                    text: `🎓  ${(header.quote || 'CÓ HỌC MỚI THÀNH TÀI – MIỆT MÀI MỚI THÀNH GIỎI').toUpperCase()}`,
                     bold: true,
                     size: 20,
                     color: 'FFFFFF',
                   }),
                 ],
               }),
+            ],
+          }),
+
+          // Right: School Name
+          new TableCell({
+            width: { size: 38, type: WidthType.PERCENTAGE },
+            shading: { fill: primaryColorHex },
+            margins: { top: 90, bottom: 90, left: 100, right: 160 },
+            children: [
               new Paragraph({
                 alignment: AlignmentType.RIGHT,
                 children: [
                   new TextRun({
-                    text: `SĐT/Zalo: ${footer.contactPhone || '0939069119'}`,
-                    size: 17,
-                    color: 'E2E8F0',
-                  }),
-                ],
-              }),
-              new Paragraph({
-                alignment: AlignmentType.RIGHT,
-                children: [
-                  new TextRun({
-                    text: ` MÃ ĐỀ THI: [${header.examCode || '101'}] `,
+                    text: (header.schoolName || 'TRƯỜNG THPT CHÂU THÀNH A').toUpperCase(),
                     bold: true,
-                    size: 19,
-                    color: 'FFFFFF',
-                    shading: { fill: accentColorHex },
+                    size: 20,
+                    color: 'FEF08A', // Gold/Amber accent
                   }),
                 ],
               }),
@@ -255,18 +215,18 @@ export async function exportToDocx(docData: DocumentData) {
     ],
   });
 
-  // ==========================================
-  // 2. EXAM TITLE & METADATA SECTION
-  // ==========================================
+  // =========================================================================
+  // 2. MAIN WHITE CANVAS TITLE & METADATA
+  // =========================================================================
   const titleParagraphs: Paragraph[] = [
     new Paragraph({
-      spacing: { before: 200, after: 80 },
+      spacing: { before: 180, after: 60 },
       alignment: AlignmentType.CENTER,
       children: [
         new TextRun({
           text: (header.examTitle || 'ĐỀ ÔN TẬP TOÁN THPT QUỐC GIA').toUpperCase(),
           bold: true,
-          size: 30, // 15pt
+          size: 32, // 16pt
           color: primaryColorHex,
         }),
       ],
@@ -276,80 +236,115 @@ export async function exportToDocx(docData: DocumentData) {
       alignment: AlignmentType.CENTER,
       children: [
         new TextRun({
-          text: (header.subject || 'MÔN: TOÁN HỌC').toUpperCase(),
+          text: (header.subject || 'MÔN: TOÁN HỌC - KHỐI 12').toUpperCase(),
           bold: true,
           size: 23,
           color: slateDarkHex,
         }),
       ],
     }),
+    // Decorative Star Separator Line
     new Paragraph({
       spacing: { after: 120 },
       alignment: AlignmentType.CENTER,
       children: [
         new TextRun({
-          text: header.duration || 'Thời gian làm bài: 90 phút (Không kể thời gian phát đề)',
-          italics: true,
-          size: 19,
-          color: '475569',
-        }),
-      ],
-    }),
-    new Paragraph({
-      spacing: { after: 160 },
-      alignment: AlignmentType.CENTER,
-      children: [
-        new TextRun({
-          text: '★  ★  ★',
+          text: '───────────────  ★  ───────────────',
           bold: true,
-          size: 18,
-          color: accentColorHex,
+          size: 19,
+          color: primaryColorHex,
         }),
       ],
     }),
   ];
 
-  // Student Info Box
-  let studentInfoElement: Table | null = null;
-  if (header.showStudentInfoBox) {
-    studentInfoElement = new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      borders: {
-        top: { style: BorderStyle.SINGLE, size: 6, color: 'CBD5E1' },
-        bottom: { style: BorderStyle.SINGLE, size: 6, color: 'CBD5E1' },
-        left: { style: BorderStyle.SINGLE, size: 6, color: 'CBD5E1' },
-        right: { style: BorderStyle.SINGLE, size: 6, color: 'CBD5E1' },
-        insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
-        insideVertical: { style: BorderStyle.NONE, size: 0, color: 'auto' },
-      },
-      rows: [
-        new TableRow({
-          children: [
-            new TableCell({
-              shading: { fill: 'F8FAFC' },
-              margins: { top: 80, bottom: 80, left: 140, right: 140 },
-              children: [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: 'Họ và tên thí sinh: ............................................................................   SBD: ......................  Lớp: .............',
-                      size: 20,
-                      italics: true,
-                      color: '334155',
-                    }),
-                  ],
-                }),
-              ],
-            }),
-          ],
-        }),
-      ],
-    });
-  }
+  // =========================================================================
+  // 3. TEACHER INFO & STUDENT INFO SUB-BAR (2 Columns with subtle dashed divider)
+  // Left: Teacher Name & Duration | Right: Student Name, SBD, Class, Exam Code
+  // =========================================================================
+  const teacherAndStudentTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: {
+      top: { style: BorderStyle.DASHED, size: 6, color: 'CBD5E1' },
+      bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      insideVertical: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+    },
+    rows: [
+      new TableRow({
+        children: [
+          // Left Cell: Teacher Name & Duration
+          new TableCell({
+            width: { size: 45, type: WidthType.PERCENTAGE },
+            margins: { top: 80, bottom: 80, left: 60, right: 60 },
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `👤 Biên soạn: ${footer.teacherName || 'Ths Lê Thị Hiếu'}`,
+                    bold: true,
+                    size: 20,
+                    color: '0F172A',
+                  }),
+                ],
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `⏱ ${header.duration || 'Thời gian làm bài: 90 phút (Không kể thời gian phát đề)'}`,
+                    italics: true,
+                    size: 18,
+                    color: '64748B',
+                  }),
+                ],
+              }),
+            ],
+          }),
 
-  // ==========================================
-  // 3. OPTICAL MARK SHEET (PHIẾU TÔ TRẮC NGHIỆM)
-  // ==========================================
+          // Right Cell: Student Info & Exam Code
+          new TableCell({
+            width: { size: 55, type: WidthType.PERCENTAGE },
+            margins: { top: 80, bottom: 80, left: 60, right: 60 },
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.RIGHT,
+                children: [
+                  new TextRun({
+                    text: 'Họ và tên thí sinh: ................................................................',
+                    italics: true,
+                    size: 19,
+                    color: '334155',
+                  }),
+                ],
+              }),
+              new Paragraph({
+                alignment: AlignmentType.RIGHT,
+                children: [
+                  new TextRun({
+                    text: 'SBD: .................... Lớp: .........   Mã đề: ',
+                    size: 19,
+                    color: '334155',
+                  }),
+                  new TextRun({
+                    text: `[${header.examCode || '101'}]`,
+                    bold: true,
+                    size: 20,
+                    color: primaryColorHex,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+
+  // =========================================================================
+  // 4. OPTICAL MARK SHEET (PHIẾU TRẢ LỜI TRẮC NGHIỆM)
+  // =========================================================================
   let markSheetTable: Table | null = null;
   const mcQuestions = questions.filter((q) => q.type === 'multiple_choice');
   if (header.showOpticalMarkSheet && mcQuestions.length > 0) {
@@ -363,7 +358,7 @@ export async function exportToDocx(docData: DocumentData) {
           new Paragraph({
             children: [
               new TextRun({
-                text: `PHIẾU TRẢ LỜI TRẮC NGHIỆM (TÔ ĐEN Ô TRÒN PHƯƠNG ÁN ĐÚNG) - MÃ ĐỀ: [${header.examCode || '101'}]`,
+                text: `📋 PHIẾU TRẢ LỜI TRẮC NGHIỆM (TÔ ĐEN Ô TRÒN PHƯƠNG ÁN ĐÚNG) - MÃ ĐỀ: [${header.examCode || '101'}]`,
                 bold: true,
                 size: 18,
                 color: primaryColorHex,
@@ -413,9 +408,9 @@ export async function exportToDocx(docData: DocumentData) {
     });
   }
 
-  // ==========================================
-  // 4. QUESTION CARDS WITH COLORED BORDERS & BADGES
-  // ==========================================
+  // =========================================================================
+  // 5. QUESTION CARDS (ĐÓNG KHUNG MÀU TỪNG CÂU HỎI NHƯ BẢN PDF)
+  // =========================================================================
   const questionElements: (Table | Paragraph)[] = [];
 
   questions.forEach((q) => {
@@ -430,7 +425,7 @@ export async function exportToDocx(docData: DocumentData) {
 
     const cellContents: (Paragraph | Table)[] = [];
 
-    // --- A. Question Header & Body ---
+    // --- A. Question Header Badge & Text ---
     const headerRuns: TextRun[] = [
       new TextRun({
         text: ` CÂU ${q.number} `,
@@ -476,7 +471,75 @@ export async function exportToDocx(docData: DocumentData) {
       })
     );
 
-    // --- B. Multiple Choice Options (Formatted Grid Table) ---
+    // --- B. Math Figure Box (Hình học minh họa 2D/3D/Bảng biến thiên nếu có) ---
+    if (q.mathFigure && q.mathFigure.type !== 'none') {
+      const figureNote =
+        q.mathFigure.type === 'pyramid_3d'
+          ? 'Minh họa hình chóp S.ABCD trong không gian 3D - Đường cao SH ⊥ (ABCD)'
+          : q.mathFigure.type === 'cube_3d'
+          ? 'Minh họa hình lập phương ABCD.A\'B\'C\'D\''
+          : q.mathFigure.type === 'triangle_geometry'
+          ? 'Minh họa tam giác đều và đường cao tính đoạn vuông góc chung'
+          : q.mathFigure.type === 'variation_table'
+          ? 'Bảng biến thiên hàm số f(x)'
+          : q.mathFigure.type === 'coordinate_plane'
+          ? 'Đồ thị minh họa hàm số trên hệ trục Oxy'
+          : 'Hình vẽ hình học minh họa';
+
+      const figureBoxTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+          top: { style: BorderStyle.SINGLE, size: 6, color: 'CBD5E1' },
+          bottom: { style: BorderStyle.SINGLE, size: 6, color: 'CBD5E1' },
+          left: { style: BorderStyle.SINGLE, size: 6, color: 'CBD5E1' },
+          right: { style: BorderStyle.SINGLE, size: 6, color: 'CBD5E1' },
+          insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+          insideVertical: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+        },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                shading: { fill: 'F8FAFC' },
+                margins: { top: 100, bottom: 100, left: 140, right: 140 },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: `✨ ${q.mathFigure.caption || figureNote}`,
+                        bold: true,
+                        size: 20,
+                        color: primaryColorHex,
+                      }),
+                    ],
+                  }),
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 40 },
+                    children: [
+                      new TextRun({
+                        text: `[ Hình vẽ minh họa chuẩn KaTeX/SVG: ${figureNote} ]`,
+                        italics: true,
+                        size: 18,
+                        color: '64748B',
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+
+      cellContents.push(
+        new Paragraph({ spacing: { before: 60, after: 60 } }),
+        figureBoxTable
+      );
+    }
+
+    // --- C. Multiple Choice Options (Formatted Grid Table) ---
     if (q.type === 'multiple_choice' && q.options && q.options.length > 0) {
       const cleanOpts = q.options.map((opt) => cleanMathForDocx(opt.replace(/^[A-D]\.\s*/, '')));
       const optRows: TableRow[] = [];
@@ -587,7 +650,7 @@ export async function exportToDocx(docData: DocumentData) {
       cellContents.push(optionsTable);
     }
 
-    // --- C. True / False Group Table (Chuẩn Bộ GD&ĐT 2025) ---
+    // --- D. True / False Group Table (Chuẩn Bộ GD&ĐT 2025: Bảng Đúng/Sai 4 ý) ---
     if (q.type === 'true_false_group' && q.tfItems && q.tfItems.length > 0) {
       const tfRows: TableRow[] = [
         new TableRow({
@@ -637,8 +700,8 @@ export async function exportToDocx(docData: DocumentData) {
 
       q.tfItems.forEach((item) => {
         const isTeacher = showAnswerKey === 'inline_teacher';
-        const dMark = isTeacher && item.isCorrect ? '[ X ]' : '[   ]';
-        const sMark = isTeacher && !item.isCorrect ? '[ X ]' : '[   ]';
+        const dMark = isTeacher ? (item.isCorrect ? '[ X ]' : '◯') : '◯';
+        const sMark = isTeacher ? (!item.isCorrect ? '[ X ]' : '◯') : '◯';
 
         tfRows.push(
           new TableRow({
@@ -668,7 +731,7 @@ export async function exportToDocx(docData: DocumentData) {
                         text: dMark,
                         bold: true,
                         size: 20,
-                        color: item.isCorrect ? emeraldHex : '94A3B8',
+                        color: isTeacher && item.isCorrect ? emeraldHex : '94A3B8',
                       }),
                     ],
                   }),
@@ -686,7 +749,7 @@ export async function exportToDocx(docData: DocumentData) {
                         text: sMark,
                         bold: true,
                         size: 20,
-                        color: !item.isCorrect ? roseHex : '94A3B8',
+                        color: isTeacher && !item.isCorrect ? roseHex : '94A3B8',
                       }),
                     ],
                   }),
@@ -713,7 +776,7 @@ export async function exportToDocx(docData: DocumentData) {
       cellContents.push(tfTable);
     }
 
-    // --- D. Teacher Solution Box (Emerald Styled Card) ---
+    // --- E. Teacher Solution Box (Emerald Styled Card) ---
     if (showAnswerKey === 'inline_teacher' && (q.solution || q.answerKey)) {
       const solutionChildren: Paragraph[] = [
         new Paragraph({
@@ -785,7 +848,7 @@ export async function exportToDocx(docData: DocumentData) {
       );
     }
 
-    // --- E. Working Lines / Student Working Area ---
+    // --- F. Working Lines / Student Working Area ---
     if (docData.workingSpaceMode !== 'compact_none') {
       if (q.spaceType === 'lines' || docData.workingSpaceMode === 'all_lines') {
         const lineCount = Math.max(3, q.calculatedLines || 4);
@@ -824,7 +887,7 @@ export async function exportToDocx(docData: DocumentData) {
                     new Paragraph({
                       children: [
                         new TextRun({
-                          text: `[ Khung làm bài / Ô trình bày lời giải - ${q.calculatedLines || 6} dòng ]`,
+                          text: `[ Khung làm bài / Ô trình bày lời giải - ${q.calculatedLines || 6} dòng ô ly ]`,
                           italics: true,
                           size: 18,
                           color: '94A3B8',
@@ -845,7 +908,7 @@ export async function exportToDocx(docData: DocumentData) {
       }
     }
 
-    // --- F. Wrap all into Outer Card Table for this Question ---
+    // --- G. Wrap all into Outer Card Table for this Question ---
     const questionCardTable = new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       borders: {
@@ -875,9 +938,9 @@ export async function exportToDocx(docData: DocumentData) {
     );
   });
 
-  // ==========================================
-  // 5. ANSWER KEY SECTION AT BOTTOM (IF SELECTED)
-  // ==========================================
+  // =========================================================================
+  // 6. ANSWER KEY SECTION AT BOTTOM (IF SELECTED)
+  // =========================================================================
   const answerKeyElements: (Paragraph | Table)[] = [];
   if (showAnswerKey === 'bottom') {
     const answerKeyHeaderTable = new Table({
@@ -990,9 +1053,9 @@ export async function exportToDocx(docData: DocumentData) {
     });
   }
 
-  // ==========================================
-  // 6. BRANDED FOOTER (Chân trang Giáo viên)
-  // ==========================================
+  // =========================================================================
+  // 7. BRANDED FOOTER (Chân trang Giáo viên)
+  // =========================================================================
   const documentFooter = new Footer({
     children: [
       new Paragraph({
@@ -1018,9 +1081,9 @@ export async function exportToDocx(docData: DocumentData) {
     ],
   });
 
-  // ==========================================
-  // 7. ASSEMBLE DOCUMENT & SAVE
-  // ==========================================
+  // =========================================================================
+  // 8. ASSEMBLE DOCUMENT & SAVE
+  // =========================================================================
   const doc = new Document({
     sections: [
       {
@@ -1036,9 +1099,10 @@ export async function exportToDocx(docData: DocumentData) {
           default: documentFooter,
         },
         children: [
-          bannerTable,
+          topSloganTable,
           ...titleParagraphs,
-          ...(studentInfoElement ? [studentInfoElement, new Paragraph({ spacing: { after: 180 } })] : []),
+          teacherAndStudentTable,
+          new Paragraph({ spacing: { after: 180 } }),
           ...(markSheetTable ? [markSheetTable, new Paragraph({ spacing: { after: 200 } })] : []),
           ...questionElements,
           ...answerKeyElements,
